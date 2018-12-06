@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# VS Code
+pova.code-workspace
+
+# Openpose Branch
+openpose/pose/coco
+
 # Distribution / packaging
 .Python
 build/

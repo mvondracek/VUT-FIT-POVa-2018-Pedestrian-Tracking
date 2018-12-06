@@ -1,0 +1,7 @@
+Windows:
+Nacitanie anaconda enviromentu:
+    conda env create -f=/path/to/environment.yml
+
+Nacitanie dat pre tutorial - https://www.learnopencv.com/multi-person-pose-estimation-in-opencv-using-openpose/ 
+(cez Git Bash)
+    ./getModels.sh
