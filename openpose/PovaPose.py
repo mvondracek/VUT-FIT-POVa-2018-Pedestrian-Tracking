@@ -13,7 +13,7 @@ class PovaPose:
         """ Single person """
         """ Nose, Right ankle, Left ankle """
         self.main_points = [0, 10, 13]
-        self.main_points_multi = [12, 8, 11]
+        self.main_points_multi = [12, 6, 9, 8, 11]
 
         self.POSE_PAIRS = [[1, 0], [1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10], [1, 11],
                            [11, 12], [12, 13], [0, 14], [0, 15], [14, 16], [15, 17]]
@@ -107,11 +107,13 @@ class PovaPose:
         return points
 
     def run_multi_person_detection(self):
-        """ Returns the structure for each person
+        """ Structure for each person
             [0] - Sub picture for person
             [1] - Nose xy
-            [2] - Left ankle
-            [3] - Right ankle
+            [2] - Right hip
+            [3] - Left hip
+            [4] - Right ankle
+            [5] - Left ankle
         """
         output = self.net.forward()
 
@@ -173,12 +175,14 @@ class PovaPose:
                     cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
                 """
             person = self.get_sub_image(leftTopPoint, rightBottomPoint, frameClone)
-            structure = [[] for count in range(4)]
+            structure = [[] for count in range(6)]
             """ Structure for each person
                 [0] - Sub picture for person
                 [1] - Nose xy
-                [2] - Left ankle
-                [3] - Right ankle
+                [2] - Right hip
+                [3] - Left hip
+                [4] - Right ankle
+                [5] - Left ankle
             """
             structure[0] = person
             for idx, p in enumerate(self.main_points_multi):

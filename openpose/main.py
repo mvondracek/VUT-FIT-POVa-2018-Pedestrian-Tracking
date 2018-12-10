@@ -17,7 +17,7 @@ def run_single_person_detection():
 
 
 def run_multi_person_detection():
-    frame1 = cv2.imread("test.jpg")
+    frame1 = cv2.imread("test2.jpg")
 
     detector_cam1 = pp.PovaPose()
     detector_cam1.set_image_for_detection(frame1)
