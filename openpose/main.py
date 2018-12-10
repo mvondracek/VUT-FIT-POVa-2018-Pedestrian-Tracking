@@ -5,8 +5,8 @@ import PovaPose as pp
 
 
 def run_single_person_detection():
-    frame1 = cv2.imread("ja11.jpg")
-    frame2 = cv2.imread("ja22.jpg")
+    frame1 = cv2.imread("test.jpg")
+    frame2 = cv2.imread("test2.jpg")
 
     detector_cam1 = pp.PovaPose()
     detector_cam1.set_image_for_detection(frame1)
@@ -17,12 +17,14 @@ def run_single_person_detection():
 
 
 def run_multi_person_detection():
-    frame1 = cv2.imread("group.jpg")
+    frame1 = cv2.imread("test.jpg")
 
     detector_cam1 = pp.PovaPose()
     detector_cam1.set_image_for_detection(frame1)
-    detector_cam1.run_multiple_person_detection()
-
+    result = detector_cam1.run_multi_person_detection()
+    for r in result:
+        cv2.imshow("Detected Pose", r[0])
+        cv2.waitKey(0)
 
 def main():
     """run_single_person_detection()"""

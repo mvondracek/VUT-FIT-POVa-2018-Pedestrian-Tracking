@@ -13,6 +13,8 @@ class PovaPose:
         """ Single person """
         """ Nose, Right ankle, Left ankle """
         self.main_points = [0, 10, 13]
+        self.main_points_multi = [12, 8, 11]
+
         self.POSE_PAIRS = [[1, 0], [1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10], [1, 11],
                            [11, 12], [12, 13], [0, 14], [0, 15], [14, 16], [15, 17]]
 
@@ -104,58 +106,108 @@ class PovaPose:
 
         return points
 
-    def run_multiple_person_detection(self):
+    def run_multi_person_detection(self):
+        """ Returns the structure for each person
+            [0] - Sub picture for person
+            [1] - Nose xy
+            [2] - Left ankle
+            [3] - Right ankle
+        """
         output = self.net.forward()
+
         keypoint_id = 0
+        frame_copy_2 = self.frameCopy
 
         for part in range(self.nPoints):
             probMap = output[0, part, :, :]
-            probMap = cv2.resize(probMap, (self.frameCopy.shape[1], self.frameCopy.shape[0]))
-            keypoints = self.getKeypoints(probMap, self.threshold)
+            probMap = cv2.resize(probMap, (frame_copy_2.shape[1], frame_copy_2.shape[0]))
+            keypoints = self.getKeypoints(probMap)
             keypoints_with_id = []
             for i in range(len(keypoints)):
                 keypoints_with_id.append(keypoints[i] + (keypoint_id,))
                 self.keypoints_list = np.vstack([self.keypoints_list, keypoints[i]])
                 keypoint_id += 1
 
-                self.detected_keypoints.append(keypoints_with_id)
+            self.detected_keypoints.append(keypoints_with_id)
 
-        frameClone = self.frameCopy.copy()
-        for i in range(self.nPoints):
-            for j in range(len(self.detected_keypoints[i])):
-                cv2.circle(frameClone, self.detected_keypoints[i][j][0:2], 5, self.colors[i], -1, cv2.LINE_AA)
-        cv2.imshow("Keypoints", frameClone)
-
+        frameClone = frame_copy_2.copy()
         valid_pairs, invalid_pairs = self.getValidPairs(output)
         personwiseKeypoints = self.getPersonwiseKeypoints(valid_pairs, invalid_pairs)
 
-        for i in range(17):
-            for n in range(len(personwiseKeypoints)):
+        return self.getResultForEachPerson(personwiseKeypoints, frameClone)
+
+    def getResultForEachPerson(self, personwiseKeypoints, frameClone):
+        people = []
+
+        for n in range(len(personwiseKeypoints)):
+            leftTopPoint = [self.frameWidth, self.frameHeight]
+            rightBottomPoint = [0, 0]
+            for i in range(17):
                 index = personwiseKeypoints[n][np.array(self.MULTI_POSE_PAIRS[i])]
                 if -1 in index:
                     continue
                 B = np.int32(self.keypoints_list[index.astype(int), 0])
                 A = np.int32(self.keypoints_list[index.astype(int), 1])
-                cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
 
-        cv2.imshow("Detected Pose", frameClone)
+                if leftTopPoint[0] > B[0]:
+                    leftTopPoint[0] = B[0]
+                if leftTopPoint[0] > B[1]:
+                    leftTopPoint[0] = B[1]
+
+                if leftTopPoint[1] > A[0]:
+                    leftTopPoint[1] = A[0]
+                if leftTopPoint[1] > A[1]:
+                    leftTopPoint[1] = A[1]
+
+                if rightBottomPoint[0] < B[1]:
+                    rightBottomPoint[0] = B[1]
+                if rightBottomPoint[0] < B[0]:
+                    rightBottomPoint[0] = B[0]
+
+                if rightBottomPoint[1] < A[0]:
+                    rightBottomPoint[1] = A[0]
+                if rightBottomPoint[1] < A[1]:
+                    rightBottomPoint[1] = A[1]
+
+                """
+                    cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
+                """
+            person = self.get_sub_image(leftTopPoint, rightBottomPoint, frameClone)
+            structure = [[] for count in range(4)]
+            """ Structure for each person
+                [0] - Sub picture for person
+                [1] - Nose xy
+                [2] - Left ankle
+                [3] - Right ankle
+            """
+            structure[0] = person
+            for idx, p in enumerate(self.main_points_multi):
+                index = personwiseKeypoints[n][np.array(self.MULTI_POSE_PAIRS[p])]
+                if -1 in index:
+                    continue
+                B = np.int32(self.keypoints_list[index.astype(int), 0])
+                A = np.int32(self.keypoints_list[index.astype(int), 1])
+
+                """Save point"""
+                structure[idx + 1] = [B[1], A[1]]
+
+                cv2.circle(self.frameCopy, (int(B[1]), int(A[1])), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+
+            cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
+            people.append(structure)
+
+        people = people
+        cv2.imshow("Detected Pose", self.frameCopy)
         cv2.waitKey(0)
+        return people
 
-    """
-    //TODO
-    *
-    *
-    *
-    *
-    *
-    *
-    *
-    """
-    def getKeypoints(self, probMap, threshold=0.1):
+    def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
+        return frame_clone[left_top_point[1]:right_bottom_point[1], left_top_point[0]:right_bottom_point[0]]
 
+    def getKeypoints(self, probMap):
         mapSmooth = cv2.GaussianBlur(probMap, (3, 3), 0, 0)
 
-        mapMask = np.uint8(mapSmooth > threshold)
+        mapMask = np.uint8(mapSmooth > self.threshold)
         keypoints = []
 
         # find the blobs
@@ -169,9 +221,9 @@ class PovaPose:
             _, maxVal, _, maxLoc = cv2.minMaxLoc(maskedProbMap)
             keypoints.append(maxLoc + (probMap[maxLoc[1], maxLoc[0]],))
 
+        # x a y for each blob containing the body part
         return keypoints
 
-    # Find valid connections between the different joints of a all persons present
     def getValidPairs(self, output):
         valid_pairs = []
         invalid_pairs = []

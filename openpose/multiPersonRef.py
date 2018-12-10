@@ -3,7 +3,7 @@ import time
 import numpy as np
 from random import randint
 
-image1 = cv2.imread("group.jpg")
+image1 = cv2.imread("test.jpg")
 
 protoFile = "pose/coco/pose_deploy_linevec.prototxt"
 weightsFile = "pose/coco/pose_iter_440000.caffemodel"
@@ -162,7 +162,6 @@ def getPersonwiseKeypoints(valid_pairs, invalid_pairs):
 frameWidth = image1.shape[1]
 frameHeight = image1.shape[0]
 
-t = time.time()
 net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
 
 # Fix the input Height and get the width according to the Aspect Ratio
@@ -174,7 +173,6 @@ inpBlob = cv2.dnn.blobFromImage(image1, 1.0 / 255, (inWidth, inHeight),
 
 net.setInput(inpBlob)
 output = net.forward()
-print("Time Taken in forward pass = {}".format(time.time() - t))
 
 detected_keypoints = []
 keypoints_list = np.zeros((0,3))
