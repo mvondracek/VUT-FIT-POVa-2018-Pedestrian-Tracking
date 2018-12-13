@@ -13,6 +13,8 @@ pova.code-workspace
 # Openpose Branch
 openpose/pose/coco/pose_iter_440000.caffemodel
 openpose/test.jpg
+openpose/f1.jpg
+openpose/f2.jpg
 
 # Distribution / packaging
 .Python

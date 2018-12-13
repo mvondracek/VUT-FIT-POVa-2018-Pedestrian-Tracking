@@ -49,6 +49,9 @@ class PovaPose:
         self.frameWidth = frame.shape[1]
         self.frameHeight = frame.shape[0]
 
+        self.detected_keypoints = []
+        self.keypoints_list = np.zeros((0, 3))
+
         in_height = 368
         in_width = int((in_height / self.frameHeight) * self.frameWidth)
         inp_blob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (in_width, in_height), (0, 0, 0), swapRB=False, crop=False)
