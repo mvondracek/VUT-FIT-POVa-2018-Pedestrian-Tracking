@@ -1,61 +1,73 @@
 import cv2
 import PovaPose as pp
+import numpy as np
 
 """ Usage example"""
 
 
-def run_single_person_detection():
-    frame1 = cv2.imread("test.jpg")
-    frame2 = cv2.imread("test2.jpg")
+def get_first_photo_from_video(videao_file_name):
+    photos = []
 
-    detector_cam1 = pp.PovaPose()
-    detector_cam1.set_image_for_detection(frame1)
-    detector_cam1.run_single_person_detection()
+    cap = cv2.VideoCapture(videao_file_name)
+    ret, frame = cap.read()
 
-    detector_cam1.set_image_for_detection(frame2)
-    detector_cam1.run_single_person_detection()
+    if not ret:
+        print("Video frame can not be loaded.")
+        return
 
+    photos.append(frame)
+    return photos
 
 def run_multi_person_detection():
-    """
-        frame1 = cv2.imread("f1.jpg")
+
+    """ OPTION 1: Get Photo from file
+        photos = []
+
+        photo_names = ["f1.jpg", "f2.jpg"]
+        
+        for fileName in photo_names:
+            frame1 = cv2.imread(p)
+            photos.append(frame1)
     """
 
-    photos = ["f1.jpg", "f2.jpg"]
+    """ OPTION 2: Get Photo from video
+        photos = getPhotosFromVideo("v1")
+    """
+
+    photos = []
+    photo_names = ["f1.jpg", "f2.jpg"]
+
+    for fileName in photo_names:
+        frame = cv2.imread(fileName)
+        photos.append(frame)
 
     detector_cam1 = pp.PovaPose()
 
     for idx_photo, p in enumerate(photos):
-        print("Result for photo number:" + str(idx_photo))
+        print("Results for photo number: " + str(idx_photo))
 
-        frame1 = cv2.imread(p)
-        detector_cam1.set_image_for_detection(frame1)
+        detector_cam1.set_image_for_detection(p)
         result = detector_cam1.run_multi_person_detection()
 
         for i, r, in enumerate(result):
-            print("Person numbere:" + str(i))
-            print("Nose yx: " + str(r[1]))
-            print("Right hip yx:" + str(r[2]))
-            print("Left hip yx:" + str(r[3]))
+            if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
+                print("Person number : " + str(i) + " does not have nose or hip detected.")
+                continue
 
-    """ Structure for each person
-        [0] - Sub picture for person
-        [1] - Nose xy
-        [2] - Right hip
-        [3] - Left hip
-        [4] - Right ankle
-        [5] - Left ankle
-    """
+            r_hip = r[2]
+            l_hip = r[3]
+            average_hip = ((r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2)
+            distance = np.linalg.norm(np.asarray(r[1]) - np.asarray(average_hip))
 
+            print("Person number: " + str(i))
+            print("Nose y,x: " + str(r[1]))
+            print("Average hip y,x: " + str(average_hip))
+            print("Nose-hip distance:" + str(distance))
 
-    """
-    cv2.imshow("Detected Pose", r[0])
     cv2.waitKey(0)
-    """
 
 
 def main():
-    """run_single_person_detection()"""
     run_multi_person_detection()
 
 

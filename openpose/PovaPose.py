@@ -198,14 +198,16 @@ class PovaPose:
                 """Save point"""
                 structure[idx + 1] = [B[1], A[1]]
 
-                cv2.circle(self.frameCopy, (int(B[1]), int(A[1])), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                cv2.circle(self.frameCopy, (int(B[1]), int(A[1])), 1, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
 
             cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
             people.append(structure)
 
         people = people
-        cv2.imshow("Detected Pose", self.frameCopy)
-        cv2.waitKey(0)
+        """
+            cv2.imshow("Detected Pose" + str(n), self.frameCopy)
+        """
+        cv2.imwrite("output_" + str(n) + ".jpg", self.frameCopy)
         return people
 
     def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
