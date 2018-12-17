@@ -19,7 +19,6 @@ def get_first_photo_from_video(videao_file_name):
     return photos
 
 def run_multi_person_detection():
-
     """ OPTION 1: Get Photo from file
         photos = []
 
@@ -35,7 +34,7 @@ def run_multi_person_detection():
     """
 
     photos = []
-    photo_names = ["f1.jpg", "f2.jpg"]
+    photo_names = ["data/f1.jpg", "data/f2.jpg"]
 
     for fileName in photo_names:
         frame = cv2.imread(fileName)
@@ -67,8 +66,53 @@ def run_multi_person_detection():
     cv2.waitKey(0)
 
 
+def get_data_for_calibration(first_image_path, second_image_path):
+    frame_f = cv2.imread(first_image_path)
+    frame_s = cv2.imread(second_image_path)
+
+    neck_hip_f = []
+    neck_hip_s = []
+
+    detector = pp.PovaPose()
+
+    detector.set_image_for_detection(frame_f)
+    result = detector.run_multi_person_detection()
+
+    for i, r, in enumerate(result):
+        if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
+            print("Person number : " + str(i) + " does not have neck or hip detected.")
+            continue
+
+        r_hip = r[2]
+        l_hip = r[3]
+        average_hip = [(r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2]
+
+        neck_hip_f.append(r[1])
+        neck_hip_f.append(average_hip)
+
+    detector.set_image_for_detection(frame_s)
+    result = detector.run_multi_person_detection()
+
+    for i, r, in enumerate(result):
+        if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
+            print("Person number : " + str(i) + " does not have neck or hip detected.")
+            continue
+
+        r_hip = r[2]
+        l_hip = r[3]
+        average_hip = [(r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2]
+
+        neck_hip_s.append(r[1])
+        neck_hip_s.append(average_hip)
+
+    return neck_hip_f, neck_hip_s
+
+
 def main():
-    run_multi_person_detection()
+    neck_hip_f, neck_hip_s = get_data_for_calibration("data/f1.jpg", "data/f2.jpg")
+
+    print("First: " + str(neck_hip_f))
+    print("Second: " + str(neck_hip_s))
 
 
 if __name__ == '__main__':
