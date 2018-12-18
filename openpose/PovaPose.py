@@ -4,8 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PovaPose:
-    def __init__(self):
-        self.net = self._net_initialization()
+    def __init__(self, prototxt_path="pose/coco/pose_deploy_linevec.prototxt", caffemodel_path="pose/coco/pose_iter_440000.caffemodel"):
+        self.net = cv2.dnn.readNetFromCaffe(prototxt_path, caffemodel_path)
         self.threshold = 0.1
         self.frameCopy = None
         self.frameWidth = 0
@@ -38,11 +38,6 @@ class PovaPose:
                   [0, 255, 0], [255, 200, 100], [255, 0, 255], [0, 255, 0], [255, 200, 100], [255, 0, 255],
                   [0, 0, 255], [255, 0, 0], [200, 200, 0], [255, 0, 0], [200, 200, 0], [0, 0, 0]]
 
-    @staticmethod
-    def _net_initialization():
-        proto_file = "pose/coco/pose_deploy_linevec.prototxt"
-        weights_file = "pose/coco/pose_iter_440000.caffemodel"
-        return cv2.dnn.readNetFromCaffe(proto_file, weights_file)
 
     def set_image_for_detection(self, cv2_image):
         frame = cv2_image
