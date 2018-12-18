@@ -6,6 +6,8 @@ POVa - Computer Vision
 FIT - Faculty of Information Technology
 BUT - Brno University of Technology
 """
+import math
+
 import cv2
 from unittest import TestCase
 
@@ -64,3 +66,32 @@ class TestPovaPose(TestCase):
         self.assertAlmostEqual(people[0][2][0], 983, delta=10)
         self.assertAlmostEqual(people[0][2][1], 692, delta=10)
         # self.person_detector.show()
+
+    def test_waist_to_neck(self):
+        self.person_detector.set_image_for_detection(cv2.imread('testing_data/s2_f_x0y300.png'))
+        people = self.person_detector.run_multi_person_detection()
+        # self.person_detector.show()
+        waist_to_neck = length(people[0][1], people[0][2])  # real=53
+        self.assertAlmostEqual(waist_to_neck, 341, delta=10)
+
+        self.person_detector.set_image_for_detection(cv2.imread('testing_data/s2_f_x0y600.png'))
+        people = self.person_detector.run_multi_person_detection()
+        # self.person_detector.show()
+        waist_to_neck = length(people[0][1], people[0][2])
+        self.assertAlmostEqual(waist_to_neck, 164, delta=10)
+
+        self.person_detector.set_image_for_detection(cv2.imread('testing_data/s2_m_x0y300.png'))
+        people = self.person_detector.run_multi_person_detection()
+        # self.person_detector.show()
+        waist_to_neck = length(people[0][1], people[0][2])
+        self.assertAlmostEqual(waist_to_neck, 329, delta=10)
+
+        self.person_detector.set_image_for_detection(cv2.imread('testing_data/s2_m_x0y600.png'))
+        people = self.person_detector.run_multi_person_detection()
+        # self.person_detector.show()
+        waist_to_neck = length(people[0][1], people[0][2])
+        self.assertAlmostEqual(waist_to_neck, 165, delta=10)
+
+
+def length(a, b):
+    return math.hypot(a[0] - b[0], a[1] - b[1], )
