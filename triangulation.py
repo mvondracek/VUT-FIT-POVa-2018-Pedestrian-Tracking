@@ -10,6 +10,8 @@ Basic triangulation from multiple cameras.
 
 Notes:
     http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
+    https://github.com/mbarde/twocams/blob/master/README.md
+    http://www.vision.caltech.edu/bouguetj/calib_doc/htmls/parameters.html
 """
 import math
 import numpy as np
