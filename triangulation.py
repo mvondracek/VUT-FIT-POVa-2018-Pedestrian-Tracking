@@ -10,6 +10,8 @@ Basic triangulation from multiple cameras.
 
 Notes:
     http://answers.opencv.org/question/117141/triangulate-3d-points-from-a-stereo-camera-and-chessboard/
+    https://github.com/mbarde/twocams/blob/master/README.md
+    http://www.vision.caltech.edu/bouguetj/calib_doc/htmls/parameters.html
 """
 import math
 import numpy as np
@@ -32,14 +34,16 @@ class Camera:
         self.orientation = orientation / np.linalg.norm(orientation)  # convert to unit vector
         # TODO store calibrated parameters of this camera, which are used for triangulation
 
-    def calibrate_focal_length(self, real_distance: int, real_size: int, pixel_size: int):
+    @staticmethod
+    def calibrate_focal_length(real_distance: int, real_size: int, pixel_size: int) -> float:
         """
         Calibrate focal length of the camera based on measurement of known object and its image representation.
         :param real_distance: real distance of known object from camera in millimeters
         :param real_size: real size size of known object in millimeters,
         :param pixel_size: size of known object measured in pixels in image obtained from the camera
+        :return: focal length
         """
-        self.focal_length = (pixel_size * real_distance) / real_size
+        return (pixel_size * real_distance) / real_size
 
 
 class PersonView:
