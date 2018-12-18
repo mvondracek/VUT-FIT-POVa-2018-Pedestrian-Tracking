@@ -77,16 +77,18 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
         super().setUp()
         self.real_size = 53  # cm
         z_level = 146
-        self.camera_m = Camera(name='m (front camera)',
-                               focal_length=FOCAL_LENGTH_CAMERA_M,
-                               position=(0, 0, z_level),
-                               orientation=(0, 1, 0)
-                               )
-        self.camera_f = Camera(name='f (front camera)',
-                               focal_length=FOCAL_LENGTH_CAMERA_F,
-                               position=(0, 0, z_level),
-                               orientation=(0, 1, 0)
-                               )
+        self.camera_m = Camera(
+            name='m (front camera)',
+            focal_length=FOCAL_LENGTH_CAMERA_M,
+            position=(0, 0, z_level),
+            orientation=(0, 1, 0)
+        )
+        self.camera_f = Camera(
+            name='f (front camera)',
+            focal_length=FOCAL_LENGTH_CAMERA_F,
+            position=(0, 0, z_level),
+            orientation=(0, 1, 0)
+        )
         self.person_detector = openpose.PovaPose.PovaPose(
             prototxt_path="openpose/pose/coco/pose_deploy_linevec.prototxt",
             caffemodel_path="openpose/pose/coco/pose_iter_440000.caffemodel"
