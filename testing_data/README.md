@@ -3,18 +3,21 @@
 > *If it has coordinates like a pedestrian and it has height like a pedestrian, then it must be a pedestrian.* :)
 
 ## Corridor (scene 3)
-
 * camera M, front view, single person in the image
   * `s3_m_front_single_x0y300.png`
   * `s3_m_front_single_x-50y600.png`
+  * `s3_m_front_single.mp4`
 * camera F, side view (angled), single person in the image
   * `s3_f_side_single_x0y300.png`
   * `s3_f_side_single_x-50y600.png`
-  
+  * `s3_f_side_single.mp4`
+
 * camera M, front view, multiple people in the image
   * `s3_m_front_multi_y600.png`
+  * `s3_m_front_multi.mp4`
 * camera F, side view (angled), multiple people in the image
   * `s3_f_side_multi_y600.png`
+  * `s3_f_side_multi.mp4`
 
 ## Library (scene2)
 

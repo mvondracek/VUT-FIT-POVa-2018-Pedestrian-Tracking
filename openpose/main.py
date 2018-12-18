@@ -34,7 +34,7 @@ def get_frame_from_video(video_path, frame_time=0.0):
 def save_frame_from_video(src_path, dst_path, frame_time=0.0, rotate_upside_down=False):
     """
     Extract a frame at the given time from the given video and save it as image. Use rotate_upside_down if the frame has been saved upside down. Example:
-    save_frame_from_video('../testing_data/m_front_multi.mp4', '../testing_data/s3_m_front_multi_y600.png', frame_time=20.5)
+    save_frame_from_video('../testing_data/s3_m_front_multi.mp4', '../testing_data/s3_m_front_multi_y600.png', frame_time=20.5)
     """
     frame = get_frame_from_video(src_path, frame_time)
     if rotate_upside_down:
