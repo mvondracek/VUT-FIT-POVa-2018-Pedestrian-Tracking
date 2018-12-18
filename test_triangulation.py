@@ -70,7 +70,7 @@ class TestCameraDistanceTriangulationScene1Duck(TestCase):
 
 class TestCameraDistanceTriangulationSceneLibrary(TestCase):
     """
-    Test triangulation based on distance from camera in scene1 (duck).
+    Test triangulation based on distance from camera in scene Library.
     """
 
     def setUp(self) -> None:
