@@ -49,6 +49,9 @@ class PovaPose:
         self.frameWidth = frame.shape[1]
         self.frameHeight = frame.shape[0]
 
+        self.detected_keypoints = []
+        self.keypoints_list = np.zeros((0, 3))
+
         in_height = 368
         in_width = int((in_height / self.frameHeight) * self.frameWidth)
         inp_blob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (in_width, in_height), (0, 0, 0), swapRB=False, crop=False)
@@ -109,7 +112,7 @@ class PovaPose:
     def run_multi_person_detection(self):
         """ Structure for each person
             [0] - Sub picture for person
-            [1] - Nose xy
+            [1] - Neck yx
             [2] - Right hip
             [3] - Left hip
             [4] - Right ankle
@@ -178,7 +181,7 @@ class PovaPose:
             structure = [[] for count in range(6)]
             """ Structure for each person
                 [0] - Sub picture for person
-                [1] - Nose xy
+                [1] - Neck yx
                 [2] - Right hip
                 [3] - Left hip
                 [4] - Right ankle
@@ -193,16 +196,21 @@ class PovaPose:
                 A = np.int32(self.keypoints_list[index.astype(int), 1])
 
                 """Save point"""
-                structure[idx + 1] = [B[1], A[1]]
+                if p == 12:
+                    structure[idx + 1] = [B[0], A[0]]
+                else:
+                    structure[idx + 1] = [B[1], A[1]]
 
-                cv2.circle(self.frameCopy, (int(B[1]), int(A[1])), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                cv2.circle(self.frameCopy, (int(structure[idx + 1][0]), int(structure[idx + 1][1])), 1, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
 
             cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
             people.append(structure)
 
         people = people
-        cv2.imshow("Detected Pose", self.frameCopy)
-        cv2.waitKey(0)
+        """
+            cv2.imshow("Detected Pose" + str(n), self.frameCopy)
+        """
+        cv2.imwrite("output_" + str(n) + ".jpg", self.frameCopy)
         return people
 
     def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):

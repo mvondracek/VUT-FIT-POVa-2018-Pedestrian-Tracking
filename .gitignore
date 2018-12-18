@@ -8,17 +8,19 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
+# IDE files
 .idea/
+*.code-workspace
+
 # C extensions
 *.so
 
-# VS Code
-pova.code-workspace
-
 # Openpose Branch
 openpose/pose/coco/pose_iter_440000.caffemodel
-openpose/test.jpg
+openpose/data/
+openpose/output_*
 
 # Distribution / packaging
 .Python
