@@ -1,5 +1,5 @@
 import cv2
-import PovaPose as pp
+import openpose.PovaPose as pp
 import numpy as np
 import random
 
@@ -18,6 +18,7 @@ def get_first_photo_from_video(videao_file_name):
 
     photos.append(frame)
     return photos
+
 
 def run_multi_person_detection_example():
     """ OPTION 1: Get Photo from file
@@ -50,21 +51,12 @@ def run_multi_person_detection_example():
         result = detector_cam1.run_multi_person_detection()
 
         for i, r, in enumerate(result):
-            if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
-                print("Person number : " + str(i) + " does not have nose or hip detected.")
-                continue
-
-            r_hip = r[2]
-            l_hip = r[3]
-            average_hip = ((r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2)
-            distance = np.linalg.norm(np.asarray(r[1]) - np.asarray(average_hip))
+            distance = np.linalg.norm(np.asarray(r[1]) - np.asarray(r[2]))
 
             print("Person number: " + str(i))
             print("Nose y,x: " + str(r[1]))
-            print("Average hip y,x: " + str(average_hip))
-            print("Nose-hip distance:" + str(distance))
-
-    cv2.waitKey(0)
+            print("Average hip y,x: " + str(r[2]))
+            print("Neck-hip distance:" + str(distance))
 
 
 def get_data_for_calibration(first_image_path, second_image_path):
@@ -80,31 +72,15 @@ def get_data_for_calibration(first_image_path, second_image_path):
     result = detector.run_multi_person_detection()
 
     for i, r, in enumerate(result):
-        if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
-            print("Person number : " + str(i) + " does not have neck or hip detected.")
-            continue
-
-        r_hip = r[2]
-        l_hip = r[3]
-        average_hip = [(r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2]
-
         neck_hip_f.append(r[1])
-        neck_hip_f.append(average_hip)
+        neck_hip_f.append(r[2])
 
     detector.set_image_for_detection(frame_s)
     result = detector.run_multi_person_detection()
 
     for i, r, in enumerate(result):
-        if len(r[1]) == 0 or len(r[2]) == 0 or len(r[3]) == 0:
-            print("Person number : " + str(i) + " does not have neck or hip detected.")
-            continue
-
-        r_hip = r[2]
-        l_hip = r[3]
-        average_hip = [(r_hip[0]+l_hip[0])/2, (r_hip[1]+l_hip[1])/2]
-
         neck_hip_s.append(r[1])
-        neck_hip_s.append(average_hip)
+        neck_hip_s.append(r[2])
 
     return neck_hip_f, neck_hip_s
 
@@ -181,14 +157,18 @@ def image_synchronization_example():
     synchronization = person_synchronization(cam1_images, cam2_images)
 
 
+def run_multi_person_detection_example2():
+
+
+    cv2.waitKey(0)
+
 def main():
     """
         run_multi_person_detection_example()
-        calibrationExample()
+        calibration_example()
         image_synchronization_example()
     """
-
-    image_synchronization_example()
+    calibration_example()
 
 
 if __name__ == '__main__':

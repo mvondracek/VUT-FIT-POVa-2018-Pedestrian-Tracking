@@ -113,11 +113,9 @@ class PovaPose:
         """ Structure for each person
             [0] - Sub picture for person
             [1] - Neck yx
-            [2] - Right hip
-            [3] - Left hip
-            [4] - Right ankle
-            [5] - Left ankle
+            [2] - Optimal hip yx (average or at least one of them)
         """
+        peopleResult = []
         output = self.net.forward()
 
         keypoint_id = 0
@@ -139,7 +137,25 @@ class PovaPose:
         valid_pairs, invalid_pairs = self.getValidPairs(output)
         personwiseKeypoints = self.getPersonwiseKeypoints(valid_pairs, invalid_pairs)
 
-        return self.getResultForEachPerson(personwiseKeypoints, frameClone)
+        resultSet = self.getResultForEachPerson(personwiseKeypoints, frameClone)
+
+        for i, r, in enumerate(resultSet):
+            if len(r[1]) == 0 or (len(r[2]) == 0 and len(r[3]) == 0):
+                print("Person number : " + str(i) + " does not have nose or hip detected.")
+                continue
+
+            if len(r[2]) != 0 and len(r[3]) != 0:
+                r_hip = r[2]
+                l_hip = r[3]
+                optimal_hip = [(r_hip[0] + l_hip[0]) / 2, (r_hip[1] + l_hip[1]) / 2]
+            elif len(r[2]) != 0:
+                optimal_hip = r[2]
+            else:
+                optimal_hip = r[3]
+
+            peopleResult.append([r[0], r[1], optimal_hip])
+
+        return peopleResult
 
     def getResultForEachPerson(self, personwiseKeypoints, frameClone):
         people = []
@@ -182,10 +198,10 @@ class PovaPose:
             """ Structure for each person
                 [0] - Sub picture for person
                 [1] - Neck yx
-                [2] - Right hip
-                [3] - Left hip
-                [4] - Right ankle
-                [5] - Left ankle
+                [2] - Right hip yx
+                [3] - Left hip yx
+                [4] - Right ankle yx
+                [5] - Left ankle yx
             """
             structure[0] = person
             for idx, p in enumerate(self.main_points_multi):
