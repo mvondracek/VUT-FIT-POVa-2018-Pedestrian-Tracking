@@ -149,8 +149,8 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
             view = PersonView(image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
             self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
 
-        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 15)
-        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png', 600, 15)
+        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 20)
+        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png', 600, 20)
 
     def test_locate(self):
         def create_person_view(camera, image_path):
