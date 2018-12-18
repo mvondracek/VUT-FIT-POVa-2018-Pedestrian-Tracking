@@ -174,7 +174,9 @@ class PovaPose:
         return people
 
     def show(self):
-        cv2.imshow("Bounding-boxes", self.frameCopy)
+        window_name = "Bounding-boxes"
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(window_name, self.frameCopy)
         cv2.waitKey(0)
 
     def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
