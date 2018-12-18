@@ -15,6 +15,9 @@ import numpy as np
 import openpose
 from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame
 
+FOCAL_LENGTH_CAMERA_M = Camera.calibrate_focal_length(300, 53, 341)
+FOCAL_LENGTH_CAMERA_F = Camera.calibrate_focal_length(300, 53, 329)
+
 
 class TestCameraDistanceTriangulationScene1Duck(TestCase):
     """
@@ -74,12 +77,12 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
         super().setUp()
         self.real_size = 53  # cm
         self.camera_m = Camera(name='m (front camera)',
-                               focal_length=Camera.calibrate_focal_length(300, self.real_size, 341),
+                               focal_length=FOCAL_LENGTH_CAMERA_M,
                                position=(0, 0, 146),
                                orientation=(0, 1, 0)
                                )
         self.camera_f = Camera(name='f (front camera)',
-                               focal_length=Camera.calibrate_focal_length(300, self.real_size, 329),
+                               focal_length=FOCAL_LENGTH_CAMERA_F,
                                position=(0, 0, 146),
                                orientation=(0, 1, 0)
                                )
