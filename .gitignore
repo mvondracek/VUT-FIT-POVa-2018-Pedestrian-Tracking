@@ -1,4 +1,3 @@
-.idea/
 
 # Openpose Branch
 openpose/pose/coco/pose_iter_440000.caffemodel
@@ -18,7 +17,6 @@ __pycache__/
 *$py.class
 *.pyc
 
-.idea/
 # C extensions
 *.so
 
