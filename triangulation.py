@@ -20,7 +20,7 @@ from typing import List, Tuple
 
 
 class Camera:
-    def __init__(self, name: str, focal_length: int, position: Tuple[int, int, int], orientation: Tuple[int, int, int]):
+    def __init__(self, name: str, focal_length: float, position: Tuple[int, int, int], orientation: Tuple[int, int, int]):
         """
         :param name: camera name used in user interface
         :param focal_length: focal length of camera, see `Camera.calibrate_focal_length`
