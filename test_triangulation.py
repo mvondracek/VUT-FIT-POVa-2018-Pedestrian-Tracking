@@ -13,7 +13,7 @@ import cv2
 import numpy as np
 
 import openpose
-from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame
+from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame, plot_person_time_frame
 
 FOCAL_LENGTH_CAMERA_M = Camera.calibrate_focal_length(300, 53, 341)
 FOCAL_LENGTH_CAMERA_F = Camera.calibrate_focal_length(300, 53, 329)
@@ -110,3 +110,65 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
         assert_distance(self.camera_f, 'testing_data/s2_f_x0y600.png', 600, 15)
         assert_distance(self.camera_f, 'testing_data/s2_m_x0y300.png', 300, 15)
         assert_distance(self.camera_f, 'testing_data/s2_m_x0y600.png', 600, 15)
+
+
+class TestCameraDistanceTriangulationSceneCorridor(TestCase):
+    """
+    Test triangulation based on distance from camera in scene Corridor.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.real_size = 53  # cm
+        self.camera_m = Camera(
+            name='m (front camera)',
+            focal_length=FOCAL_LENGTH_CAMERA_M,
+            position=(0, 0, 147),
+            orientation=(0, 1, 0)
+        )
+        self.camera_f = Camera(
+            name='f (side camera)',
+            focal_length=FOCAL_LENGTH_CAMERA_F,
+            position=(200, 0, 147),
+            orientation=(-1, 1, 0)
+        )
+        self.person_detector = openpose.PovaPose.PovaPose(
+            prototxt_path="openpose/pose/coco/pose_deploy_linevec.prototxt",
+            caffemodel_path="openpose/pose/coco/pose_iter_440000.caffemodel"
+        )
+        self.triangulation = CameraDistanceTriangulation(self.real_size, z_location=147)
+
+    def test_distance_from_camera(self):
+        def assert_distance(camera, image_path, distance, delta):
+            image = cv2.imread(image_path)
+            self.person_detector.set_image_for_detection(image)
+            people = self.person_detector.run_multi_person_detection()
+            self.assertEqual(len(people), 1, "Detected incorrect number of people.")
+            person = people[0]
+            self.person_detector.show()
+            view = PersonView(image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+            self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
+
+        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 15)
+        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png', 600, 15)
+
+    def test_locate(self):
+        def create_person_view(camera, image_path):
+            image_front = cv2.imread(image_path)
+            self.person_detector.set_image_for_detection(image_front)
+            people = self.person_detector.run_multi_person_detection()
+            self.assertEqual(len(people), 1, "Detected incorrect number of people.")
+            person = people[0]
+            return PersonView(image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+
+        front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png')
+        side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x0y300.png')
+
+        person_time_frame = PersonTimeFrame(datetime.datetime.now(), [front_view, side_view])
+        person_time_frame.real_subject_coordinates_3d = (0, 300, 147)
+
+        located = self.triangulation.locate(person_time_frame)
+        plot_person_time_frame(located) # for debugging
+        #self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=50)
+        #self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=50)
+        #self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=10)
