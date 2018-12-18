@@ -15,7 +15,10 @@ import numpy as np
 from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame
 
 
-class TestCameraDistanceTriangulation(TestCase):
+class TestCameraDistanceTriangulationScene1Duck(TestCase):
+    """
+    Test triangulation based on distance from camera in scene1 (duck).
+    """
 
     def setUp(self) -> None:
         super().setUp()
