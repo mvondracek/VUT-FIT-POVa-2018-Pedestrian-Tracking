@@ -76,21 +76,22 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.real_size = 53  # cm
+        z_level = 146
         self.camera_m = Camera(name='m (front camera)',
                                focal_length=FOCAL_LENGTH_CAMERA_M,
-                               position=(0, 0, 146),
+                               position=(0, 0, z_level),
                                orientation=(0, 1, 0)
                                )
         self.camera_f = Camera(name='f (front camera)',
                                focal_length=FOCAL_LENGTH_CAMERA_F,
-                               position=(0, 0, 146),
+                               position=(0, 0, z_level),
                                orientation=(0, 1, 0)
                                )
         self.person_detector = openpose.PovaPose.PovaPose(
             prototxt_path="openpose/pose/coco/pose_deploy_linevec.prototxt",
             caffemodel_path="openpose/pose/coco/pose_iter_440000.caffemodel"
         )
-        self.triangulation = CameraDistanceTriangulation(self.real_size, z_location=147)
+        self.triangulation = CameraDistanceTriangulation(self.real_size, z_location=z_level)
 
     def test_distance_from_camera(self):
         def assert_distance(camera, image_path, distance, delta):
