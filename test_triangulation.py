@@ -12,6 +12,7 @@ from unittest import TestCase
 import cv2
 import numpy as np
 
+import openpose
 from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame
 
 
@@ -62,3 +63,43 @@ class TestCameraDistanceTriangulationScene1Duck(TestCase):
         b_normal = np.array(b[:3])
         self.assertEqual(np.dot(point, a_normal), np.dot(point_forward, a_normal))
         self.assertEqual(np.dot(point, b_normal), np.dot(point_forward, b_normal))
+
+
+class TestCameraDistanceTriangulationSceneLibrary(TestCase):
+    """
+    Test triangulation based on distance from camera in scene1 (duck).
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.real_size = 53  # cm
+        self.camera_m = Camera(name='m (front camera)',
+                               focal_length=Camera.calibrate_focal_length(300, self.real_size, 341),
+                               position=(0, 0, 146),
+                               orientation=(0, 1, 0)
+                               )
+        self.camera_f = Camera(name='f (front camera)',
+                               focal_length=Camera.calibrate_focal_length(300, self.real_size, 329),
+                               position=(0, 0, 146),
+                               orientation=(0, 1, 0)
+                               )
+        self.person_detector = openpose.PovaPose.PovaPose(
+            prototxt_path="openpose/pose/coco/pose_deploy_linevec.prototxt",
+            caffemodel_path="openpose/pose/coco/pose_iter_440000.caffemodel"
+        )
+        self.triangulation = CameraDistanceTriangulation(self.real_size, z_location=147)
+
+    def test_distance_from_camera(self):
+        def assert_distance(camera, image_path, distance, delta):
+            image = cv2.imread(image_path)
+            self.person_detector.set_image_for_detection(image)
+            people = self.person_detector.run_multi_person_detection()
+            self.assertEqual(len(people), 1, "Detected incorrect number of people.")
+            person = people[0]
+            view = PersonView(image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+            self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
+
+        assert_distance(self.camera_f, 'testing_data/s2_f_x0y300.png', 300, 15)
+        assert_distance(self.camera_f, 'testing_data/s2_f_x0y600.png', 600, 15)
+        assert_distance(self.camera_f, 'testing_data/s2_m_x0y300.png', 300, 15)
+        assert_distance(self.camera_f, 'testing_data/s2_m_x0y600.png', 600, 15)
