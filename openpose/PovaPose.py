@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-
+import logging
+logger = logging.getLogger(__name__)
 
 class PovaPose:
     def __init__(self):
@@ -59,55 +60,6 @@ class PovaPose:
 
         self.net.setInput(inp_blob)
 
-    def run_single_person_detection(self):
-        """
-        Run detection on single person.
-        :return: Array of three point that represent 1.nose, 2.right ankle, 3.left ankle
-        """
-
-        """ The 'output' is a 4D matrix :
-        The first dimension being the image ID ( in case you pass more than one image to the network ).
-        The second dimension indicates the index of a keypoint. The model produces Confidence Maps and Part Affinity maps which are all concatenated.
-            For COCO model it consists of 57 parts
-                – 18 keypoint confidence Maps + 1 background
-                – 19*2 Part Affinity Maps. Similarly
-        The third dimension is the height of the output map.
-        The fourth dimension is the width of the output map.
-        """
-        output = self.net.forward()
-
-        h = output.shape[2]
-        w = output.shape[3]
-
-        # Empty list to store the detected keypoints
-        points = []
-
-        for i in self.main_points:
-            # confidence map of corresponding body's part.
-            prob_map = output[0, i, :, :]
-
-            # Find global maxima of the prob_map.
-            min_val, prob, min_loc, point = cv2.minMaxLoc(prob_map)
-
-            # Scale the point to fit on the original image
-            x = (self.frameWidth * point[0]) / w
-            y = (self.frameHeight * point[1]) / h
-
-            if prob > self.threshold:
-                cv2.circle(self.frameCopy, (int(x), int(y)), 8, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
-                cv2.putText(self.frameCopy, "{}".format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
-                            lineType=cv2.LINE_AA)
-
-                # Add the point to the list if the probability is greater than the threshold
-                points.append((int(x), int(y)))
-            else:
-                points.append(None)
-
-        cv2.imshow("Output-Keypoints", self.frameCopy)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        return points
 
     def run_multi_person_detection(self):
         """ Structure for each person
@@ -141,7 +93,7 @@ class PovaPose:
 
         for i, r, in enumerate(resultSet):
             if len(r[1]) == 0 or (len(r[2]) == 0 and len(r[3]) == 0):
-                print("Person number : " + str(i) + " does not have nose or hip detected.")
+                logger.warning("Person number : " + str(i) + " does not have nose or hip detected.")
                 continue
 
             if len(r[2]) != 0 and len(r[3]) != 0:
@@ -222,15 +174,17 @@ class PovaPose:
             cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
             people.append(structure)
 
-        people = people
-        """
-            cv2.imshow("Detected Pose" + str(n), self.frameCopy)
-        """
-        cv2.imwrite("output_" + str(n) + ".jpg", self.frameCopy)
         return people
+
+
+    def show(self):
+        cv2.imshow("Bounding-boxes", self.frameCopy)
+        cv2.waitKey(0)
+
 
     def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
         return frame_clone[left_top_point[1]:right_bottom_point[1], left_top_point[0]:right_bottom_point[0]]
+
 
     def getKeypoints(self, probMap):
         mapSmooth = cv2.GaussianBlur(probMap, (3, 3), 0, 0)
@@ -318,7 +272,6 @@ class PovaPose:
                 # Append the detected connections to the global list
                 valid_pairs.append(valid_pair)
             else:  # If no keypoints are detected
-                print("No Connection : k = {}".format(k))
                 invalid_pairs.append(k)
                 valid_pairs.append([])
         return valid_pairs, invalid_pairs

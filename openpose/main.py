@@ -50,6 +50,8 @@ def run_multi_person_detection_example():
         detector_cam1.set_image_for_detection(p)
         result = detector_cam1.run_multi_person_detection()
 
+        detector_cam1.show()
+
         for i, r, in enumerate(result):
             distance = np.linalg.norm(np.asarray(r[1]) - np.asarray(r[2]))
 
@@ -157,18 +159,12 @@ def image_synchronization_example():
     synchronization = person_synchronization(cam1_images, cam2_images)
 
 
-def run_multi_person_detection_example2():
-
-
-    cv2.waitKey(0)
-
 def main():
     """
         run_multi_person_detection_example()
         calibration_example()
         image_synchronization_example()
     """
-    calibration_example()
 
 
 if __name__ == '__main__':
