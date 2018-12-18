@@ -19,6 +19,21 @@ FOCAL_LENGTH_CAMERA_M = Camera.calibrate_focal_length(300, 53, 341)
 FOCAL_LENGTH_CAMERA_F = Camera.calibrate_focal_length(300, 53, 329)
 
 
+class TestCameraDistanceTriangulation(TestCase):
+    def test_intersect_planes(self):
+        """
+        https://stackoverflow.com/questions/48126838/plane-plane-intersection-in-python
+        """
+        a = (1, -1, 0, 2)
+        b = (-1, -1, 1, 3)
+        point, vector = CameraDistanceTriangulation.intersect_planes(a, b)
+        point_forward = point + vector
+        a_normal = np.array(a[:3])
+        b_normal = np.array(b[:3])
+        self.assertEqual(np.dot(point, a_normal), np.dot(point_forward, a_normal))
+        self.assertEqual(np.dot(point, b_normal), np.dot(point_forward, b_normal))
+
+
 class TestCameraDistanceTriangulationScene1Duck(TestCase):
     """
     Test triangulation based on distance from camera in scene1 (duck).
@@ -52,20 +67,6 @@ class TestCameraDistanceTriangulationScene1Duck(TestCase):
         triangulation = CameraDistanceTriangulation(self.real_size, 30)
         self.assertAlmostEqual(triangulation.distance_from_camera(self.front), 400, delta=10)
         self.assertAlmostEqual(triangulation.distance_from_camera(self.side), 500, delta=10)
-
-    def test_intersect_planes(self):
-        """
-        https://stackoverflow.com/questions/48126838/plane-plane-intersection-in-python
-        """
-        a = (1, -1, 0, 2)
-        b = (-1, -1, 1, 3)
-        triangulation = CameraDistanceTriangulation(self.real_size, 30)
-        point, vector = triangulation.intersect_planes(a, b)
-        point_forward = point + vector
-        a_normal = np.array(a[:3])
-        b_normal = np.array(b[:3])
-        self.assertEqual(np.dot(point, a_normal), np.dot(point_forward, a_normal))
-        self.assertEqual(np.dot(point, b_normal), np.dot(point_forward, b_normal))
 
 
 class TestCameraDistanceTriangulationSceneLibrary(TestCase):
