@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # ------------------------- BODY, FACE AND HAND MODELS -------------------------
 # Downloading body pose (COCO and MPI), face and hand models
 OPENPOSE_URL="http://posefs1.perception.cs.cmu.edu/OpenPose/models/"

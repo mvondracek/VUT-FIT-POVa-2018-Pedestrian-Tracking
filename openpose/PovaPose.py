@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class PovaPose:
     def __init__(self, prototxt_path="pose/coco/pose_deploy_linevec.prototxt", caffemodel_path="pose/coco/pose_iter_440000.caffemodel"):
@@ -35,9 +37,8 @@ class PovaPose:
                        [37, 38], [45, 46]]
 
         self.colors = [[0, 100, 255], [0, 100, 255], [0, 255, 255], [0, 100, 255], [0, 255, 255], [0, 100, 255],
-                  [0, 255, 0], [255, 200, 100], [255, 0, 255], [0, 255, 0], [255, 200, 100], [255, 0, 255],
-                  [0, 0, 255], [255, 0, 0], [200, 200, 0], [255, 0, 0], [200, 200, 0], [0, 0, 0]]
-
+                       [0, 255, 0], [255, 200, 100], [255, 0, 255], [0, 255, 0], [255, 200, 100], [255, 0, 255],
+                       [0, 0, 255], [255, 0, 0], [200, 200, 0], [255, 0, 0], [200, 200, 0], [0, 0, 0]]
 
     def set_image_for_detection(self, cv2_image):
         frame = cv2_image
@@ -54,7 +55,6 @@ class PovaPose:
         # Fix the input Height and get the width according to the Aspect Ratio
 
         self.net.setInput(inp_blob)
-
 
     def run_multi_person_detection(self):
         """ Structure for each person
@@ -168,20 +168,17 @@ class PovaPose:
                 else:
                     structure[idx + 1] = [B[1], A[1]]
 
-            cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
+            cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255, 0, 0))
             people.append(structure)
 
         return people
-
 
     def show(self):
         cv2.imshow("Bounding-boxes", self.frameCopy)
         cv2.waitKey(0)
 
-
     def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
         return frame_clone[left_top_point[1]:right_bottom_point[1], left_top_point[0]:right_bottom_point[0]]
-
 
     def getKeypoints(self, probMap):
         mapSmooth = cv2.GaussianBlur(probMap, (3, 3), 0, 0)
@@ -281,8 +278,8 @@ class PovaPose:
 
         for k in range(len(self.mapIdx)):
             if k not in invalid_pairs:
-                partAs = valid_pairs[k][:,0]
-                partBs = valid_pairs[k][:,1]
+                partAs = valid_pairs[k][:, 0]
+                partBs = valid_pairs[k][:, 1]
                 indexA, indexB = np.array(self.MULTI_POSE_PAIRS[k])
 
                 for i in range(len(valid_pairs[k])):
@@ -304,6 +301,6 @@ class PovaPose:
                         row[indexA] = partAs[i]
                         row[indexB] = partBs[i]
                         # add the keypoint_scores for the two keypoints and the paf_score
-                        row[-1] = sum(self.keypoints_list[valid_pairs[k][i,:2].astype(int), 2]) + valid_pairs[k][i][2]
+                        row[-1] = sum(self.keypoints_list[valid_pairs[k][i, :2].astype(int), 2]) + valid_pairs[k][i][2]
                         personwiseKeypoints = np.vstack([personwiseKeypoints, row])
         return personwiseKeypoints

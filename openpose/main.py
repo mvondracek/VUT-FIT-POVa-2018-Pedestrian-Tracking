@@ -55,7 +55,7 @@ def run_multi_person_detection_example():
     """
 
     photos = []
-    photo_names = ["data/f1.jpg", "data/f2.jpg"]
+    photo_names = ["../testing_data/f_x0y300.png", "../testing_data/f_x0y600.png", "../testing_data/m_x0y600.png", "../testing_data/m_x0y300.png"]
 
     for fileName in photo_names:
         frame = cv2.imread(fileName)
