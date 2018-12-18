@@ -175,7 +175,9 @@ class PovaPose:
 
 
     def show(self):
-        cv2.imshow("Bounding-boxes", self.frameCopy)
+        window_name = "Bounding-boxes"
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(window_name, self.frameCopy)
         cv2.waitKey(0)
 
 
