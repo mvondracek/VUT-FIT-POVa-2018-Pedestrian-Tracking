@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 SCRIPT_NAME=$(basename "$0")
 if [ -z $1 ]; then
     echo "Removes audio from a copy of the given video using FFMPEG utility. Doesn't change the original file."
-    echo "./$SCRIPT_NAME video.file  # creates a muted_video.file (original file without audio)"
+    echo "./$SCRIPT_NAME video.file  # creates a muted_video.file (copied file without audio)"
     exit 1
 fi
 

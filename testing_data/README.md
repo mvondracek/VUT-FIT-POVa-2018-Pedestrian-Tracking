@@ -14,3 +14,10 @@
 * `s1_front_d150_h50.jpg` front camera, distance 150 mm, real height 50 mm
 * `s1_front_d400.jpg` front camera, distance 400 mm
 * `s1_side_d500.jpg` side camera, distance 500 mm
+
+## Scene 3
+
+* `s3_m_front_single...` camera M, front view, single person in the image
+* `s3_f_side_single...` camera F, side view (angled), single person in the image
+* `s3_m_front_multi...` camera M, front view, multiple people in the image
+* `s3_f_side_multi...` camera F, side view (angled), multiple people in the image
