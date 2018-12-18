@@ -102,6 +102,10 @@ class PovaPose:
 
             peopleResult.append([r[0], r[1], optimal_hip])
 
+        for r in peopleResult:
+            cv2.circle(self.frameCopy, (int(r[1][0]), int(r[1][1])), 1, (0, 255, 255), thickness=1, lineType=cv2.FILLED)
+            cv2.circle(self.frameCopy, (int(r[2][0]), int(r[2][1])), 1, (0, 255, 255), thickness=1, lineType=cv2.FILLED)
+
         return peopleResult
 
     def getResultForEachPerson(self, personwiseKeypoints, frameClone):
@@ -163,8 +167,6 @@ class PovaPose:
                     structure[idx + 1] = [B[0], A[0]]
                 else:
                     structure[idx + 1] = [B[1], A[1]]
-
-                cv2.circle(self.frameCopy, (int(structure[idx + 1][0]), int(structure[idx + 1][1])), 1, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
 
             cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255,0,0))
             people.append(structure)
