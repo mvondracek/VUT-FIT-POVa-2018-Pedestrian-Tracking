@@ -6,6 +6,6 @@ if [ -z $1 ]; then
     echo "./$SCRIPT_NAME video.file  # creates a muted_video.file (original file without audio)"
     exit 1
 fi
- 
-NEW_NAME="muted_$1"
+
+NEW_NAME="muted_$(basename "$1")"
 ffmpeg -i $1 -vcodec copy -an $NEW_NAME
