@@ -43,6 +43,7 @@ class PersonTimeFrame:
 
 def plot_person_time_frame(person_time_frame: PersonTimeFrame):
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # required for `ax = fig.add_subplot(111, projection='3d')`
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')  # requires `from mpl_toolkits.mplot3d import Axes3D`
     plot_size_x = 500
