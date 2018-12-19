@@ -13,10 +13,8 @@ import cv2
 import numpy as np
 
 import openpose
-
-FOCAL_LENGTH_CAMERA_M = Camera.calibrate_focal_length(300, 53, 341)
-FOCAL_LENGTH_CAMERA_F = Camera.calibrate_focal_length(300, 53, 329)
 from camera import Camera
+from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from triangulation import CameraDistanceTriangulation, PersonView, PersonTimeFrame
 
 
@@ -77,7 +75,7 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.real_size = 53  # cm
+        self.real_size = AVERAGE_PERSON_WAIST_TO_NECK_LENGTH  # cm
         z_level = 146
         self.camera_m = Camera(
             name='m (front camera)',
@@ -120,7 +118,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.real_size = 53  # cm
+        self.real_size = AVERAGE_PERSON_WAIST_TO_NECK_LENGTH  # cm
         self.camera_m = Camera(
             name='m (front camera)',
             focal_length=FOCAL_LENGTH_CAMERA_M,
