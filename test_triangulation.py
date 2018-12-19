@@ -48,7 +48,7 @@ class TestCameraDistanceTriangulationScene1Duck(TestCase):
         self.front = PersonView(cv2.imread('testing_data/s1_front_d400.jpg'), camera_front, (383, 95), (383, 11))
         self.side = PersonView(cv2.imread('testing_data/s1_side_d500.jpg'), camera_side, (77, 86), (77, 18))
 
-        self.person_time_frame = PersonTimeFrame(datetime.datetime.now(), [self.front, self.side])
+        self.person_time_frame = PersonTimeFrame([self.front, self.side])
         self.person_time_frame.real_subject_coordinates_3d = (50, 50, 30)
         # person = Person([person_time_frame])
 
@@ -163,7 +163,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png')
         side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x0y300.png')
 
-        person_time_frame = PersonTimeFrame(datetime.datetime.now(), [front_view, side_view])
+        person_time_frame = PersonTimeFrame([front_view, side_view])
         person_time_frame.real_subject_coordinates_3d = (0, 300, 147)
 
         located = self.triangulation.locate(person_time_frame)
@@ -176,7 +176,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png')
         side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x-50y600.png')
 
-        person_time_frame = PersonTimeFrame(datetime.datetime.now(), [front_view, side_view])
+        person_time_frame = PersonTimeFrame([front_view, side_view])
         person_time_frame.real_subject_coordinates_3d = (0, 600, 147)
 
         located = self.triangulation.locate(person_time_frame)
