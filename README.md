@@ -1,5 +1,7 @@
 # VUT FIT POVa 2018 Pedestrian Tracking
 
+[![Python version](https://img.shields.io/badge/Python-3-blue.svg?style=flat-square)](https://www.python.org/)
+
 > **Task:** Implement a vision system capable of tracking multiple pedestrians from one or multiple stationary cameras. Evaluate the accuracy (how long can it track a person) on an existing dataset.
 >
 > Mandatory scored parts of the project are:
