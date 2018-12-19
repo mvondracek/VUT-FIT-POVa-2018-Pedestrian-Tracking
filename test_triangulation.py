@@ -13,10 +13,11 @@ import cv2
 import numpy as np
 
 import openpose
-from triangulation import CameraDistanceTriangulation, Camera, PersonView, PersonTimeFrame, plot_person_time_frame
 
 FOCAL_LENGTH_CAMERA_M = Camera.calibrate_focal_length(300, 53, 341)
 FOCAL_LENGTH_CAMERA_F = Camera.calibrate_focal_length(300, 53, 329)
+from camera import Camera
+from triangulation import CameraDistanceTriangulation, PersonView, PersonTimeFrame
 
 
 class TestCameraDistanceTriangulation(TestCase):

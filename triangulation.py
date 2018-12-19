@@ -19,33 +19,6 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple
 
 
-class Camera:
-    def __init__(self, name: str, focal_length: float, position: Tuple[int, int, int], orientation: Tuple[int, int, int]):
-        """
-        :param name: camera name used in user interface
-        :param focal_length: focal length of camera, see `Camera.calibrate_focal_length`
-        :param position: 3D coordinates of the camera position
-        :param orientation: 3D vector of the camera's view orientation
-        """
-        self.name = name
-        self.focal_length = focal_length
-        # TODO Position in a specific scene?
-        self.position = position
-        self.orientation = orientation / np.linalg.norm(orientation)  # convert to unit vector
-        # TODO store calibrated parameters of this camera, which are used for triangulation
-
-    @staticmethod
-    def calibrate_focal_length(real_distance: int, real_size: int, pixel_size: int) -> float:
-        """
-        Calibrate focal length of the camera based on measurement of known object and its image representation.
-        :param real_distance: real distance of known object from camera in millimeters
-        :param real_size: real size size of known object in millimeters,
-        :param pixel_size: size of known object measured in pixels in image obtained from the camera
-        :return: focal length
-        """
-        return (pixel_size * real_distance) / real_size
-
-
 class PersonView:
     """
     Single view of a person detected in an image from given camera.
