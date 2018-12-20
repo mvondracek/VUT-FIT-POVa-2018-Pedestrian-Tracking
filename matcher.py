@@ -49,3 +49,17 @@ class NullMatcher(PersonMatcher):
 class HistogramMatcher(PersonMatcher):
     def match(self, front_views: List[PersonView], side_views: List[PersonView]) -> List[PersonTimeFrame]:
         raise NotImplementedError  # TODO Implement histogram matching. See `openpose.main.person_synchronization`
+
+
+class PositionBasedHistogramMatcher(PersonMatcher):
+    """
+    # FIXME Edit the following note... This is just note to describe an idea
+    Matching based only based on histograms may be not enough. Imagine cam1 detected p1 and p2, but cam2 detected p2 and p3.
+    In this case p2 would match p2 correctly, but p1 may match p3, because that is the most matching histogram for p1.
+    To prevent that, location verification could be done based on intersection of line of sight of cam1 and cam2. If we draw
+    line from cam1 to p1, and line from cam2 to p1, they intersects in a pointX. Then we draw circle with a center in the pointX
+    and a diameter 50 cm. Then look at the best matchin person for p1 from cam1, that is p3 from cam2, and check if p3 is estimated
+    to be inside of the circle (based on distance to cam2). If p3 is inside, then probably p1 == p2, if is outside, then p1 =/= p3.
+    """
+    def match(self, front_views: List[PersonView], side_views: List[PersonView]):
+        raise NotImplementedError  # TODO histogram matching with verification based on person location

@@ -179,7 +179,8 @@ class PovaPose:
         cv2.imshow(window_name, self.frameCopy)
         cv2.waitKey(0)
 
-    def get_sub_image(self, left_top_point, right_bottom_point, frame_clone):
+    @staticmethod
+    def get_sub_image(left_top_point, right_bottom_point, frame_clone):
         return frame_clone[left_top_point[1]:right_bottom_point[1], left_top_point[0]:right_bottom_point[0]]
 
     def getKeypoints(self, probMap):
