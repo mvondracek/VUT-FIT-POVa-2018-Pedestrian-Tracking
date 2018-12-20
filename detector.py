@@ -43,5 +43,5 @@ class OpenPoseDetector(PeopleDetector):
         logger.info("Detected people = {0}".format(len(people)))
         detected = []
         for person in people:
-            detected.append(PersonView(person[0], camera, (person[1][1], person[1][0]), (person[2][1], person[2][0])))
+            detected.append(PersonView(person[0], camera, (person[1][0], person[1][1]), (person[2][0], person[2][1])))
         return detected
