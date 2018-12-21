@@ -17,8 +17,8 @@ import cv2
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from detector import OpenPoseDetector, PeopleDetector
-from matcher import NullMatcher, PersonMatcher
-from tracker import NullTracker, PersonTracker
+from matcher import PersonMatcher, HistogramMatcher
+from tracker import NullTracker, PersonTracker, PositionAndHistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
 
 logger = logging.getLogger(__name__)
@@ -69,21 +69,31 @@ def main() -> ExitCode:
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
-    matcher = NullMatcher()  # type: PersonMatcher
+    matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = NullTracker()  # type: PersonTracker
     # endregion
 
     logger.info('reading images')
-    front_image = cv2.imread('testing_data/s3_m_front_single_x0y300.png')  # TODO Implement image provider.
-    side_image = cv2.imread('testing_data/s3_f_side_single_x0y300.png')  # TODO Implement image provider.
+    front_image = cv2.imread('testing_data/s3_m_front_multi_y600.png')  # TODO Implement image provider.
+    side_image = cv2.imread('testing_data/s3_f_side_multi_y600.png')  # TODO Implement image provider.
+    # TODO calibrate images based on color of the same real-world point in the both of them
 
     logger.info('detecting people')
     front_views = detector.detect(front_image, camera_front)
     side_views = detector.detect(side_image, camera_side)
 
     logger.info('matching people')
+    matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
     time_frames = matcher.match(front_views, side_views)
+
+    name = 'debug'
+    cv2.namedWindow(name)
+    for time_frame in time_frames:
+        cv2.imshow(name, time_frame.views[0].person_image)
+        cv2.waitKey()
+        cv2.imshow(name, time_frame.views[1].person_image)
+        cv2.waitKey()
 
     logger.info('locating and tracking people')
     for time_frame in time_frames:

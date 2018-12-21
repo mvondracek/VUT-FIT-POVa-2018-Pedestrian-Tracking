@@ -1,4 +1,23 @@
+import math
+
 import cv2
+
+
+def calculate_flat_histogram(image):
+    """ Calculate flattened normalized histogram (1-D array) of the image. """
+    hist = cv2.calcHist([image], channels=[0, 1, 2], mask=None, histSize=[16, 16, 16], ranges=[0, 256, 0, 256, 0, 256])
+    cv2.normalize(hist, hist)
+    return hist.flatten()
+
+
+def euclidean_distance(v1, v2):
+    """
+    Count euclidean distance of 2 vectors representing points in N-dimensional space.
+    :param v1: vector representing point A, iterable, e.g. tuple or list
+    :param v2: vector representing point B, iterable, e.g. tuple or list
+    """
+    distances = [(a - b) ** 2 for a, b in zip(v1, v2)]
+    return math.sqrt(sum(distances))
 
 
 def get_frame_from_video(video_path, frame_time=0.0):

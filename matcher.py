@@ -9,7 +9,10 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
+import cv2
+
 from person import PersonTimeFrame, PersonView
+from utils import utils
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,7 @@ class NullMatcher(PersonMatcher):
     Simply puts together views, which are on the same position in input lists. If input lists are not the same size,
     remaining views are discarded.
     """
+
     def __init__(self):
         logger.debug('Using NullMatcher as PersonMatcher.')
 
@@ -47,8 +51,76 @@ class NullMatcher(PersonMatcher):
 
 
 class HistogramMatcher(PersonMatcher):
+    def __init__(self):
+        self.front_img_orig = None
+        self.side_img_orig = None
+
+    # FIXME: this won't be needed if "whole person image" is implemented and passed from detector->person_view->match
+    def set_original_images(self, front_image, side_image):
+        """ Each step set original images, so it is possibel to extract a torso area from them. """
+        self.front_img_orig = front_image
+        self.side_img_orig = side_image
+
+    # TODO optimalization: differ clear image and image with people -> whole person box -> could be better for histograms
     def match(self, front_views: List[PersonView], side_views: List[PersonView]) -> List[PersonTimeFrame]:
-        raise NotImplementedError  # TODO Implement histogram matching. See `openpose.main.person_synchronization`
+        front_histograms = []
+        side_histograms = []
+        for view in front_views:
+            torso = self.get_torso_subimage(view, self.front_img_orig)
+            front_histograms.append(utils.calculate_flat_histogram(torso))
+
+        for view in side_views:
+            torso = self.get_torso_subimage(view, self.side_img_orig)
+            side_histograms.append(utils.calculate_flat_histogram(torso))
+
+        """
+        # DEBUG CHECK
+        cv2.namedWindow('tst', cv2.WINDOW_NORMAL)
+        for view in front_views:
+            cv2.imshow('tst', view.person_image)
+            cv2.waitKey()
+        for view in side_views:
+            cv2.imshow('tst', view.person_image)
+            cv2.waitKey()
+        """
+        # FIXME add a threshold? Currently the values are too diverse and any threshold is useless.
+        # Multiple hist-cmp methods are used for matching. Views are matched only if all methods agree on the best match.
+        results = []
+        for index, front_hist in enumerate(front_histograms):
+            intersect_histcmps = []
+            hellinger_histcmps = []
+            for side_hist in side_histograms:
+                intersect_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_INTERSECT))
+                hellinger_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_HELLINGER))
+
+            best_intersect_match = intersect_histcmps.index(max(intersect_histcmps))  # INTERSECT method: HIGHER value ~ HIGHER similarity
+            best_hellinger_match = hellinger_histcmps.index(min(hellinger_histcmps))  # HELLINGER method: LOWER value ~ HIGHER similarity
+            if best_intersect_match == best_hellinger_match:
+                results.append(PersonTimeFrame([front_views[index], side_views[best_intersect_match]]))
+                side_histograms.pop(best_intersect_match)  # already matched a front_view, no need to compare it any further
+                side_views.pop(best_intersect_match)  # pop also the view itself, so indexes are not different for side_histograms and side_views
+
+        return results
+
+    @staticmethod
+    def get_torso_subimage(view, image):
+        """
+        Extract a subimage of just a torso for given person view. Should be better for histograms since contains less surroundings than the whole person box.
+        :param view: PersonView to find the torso coordinates for
+        :param image: original image, the torso is extracted from this image
+        :return: subimage containing only the torso
+        """
+        image_width = image.shape[1]
+        body_height = int(utils.euclidean_distance(view.pose_top_coordinate, view.pose_bottom_coordinate))
+        half_body_width = int(body_height / 6)  # an average body's width from side is about one third of the height (half of the height from front)
+
+        pose_top_left = (min(view.pose_top_coordinate[0], view.pose_bottom_coordinate[0]), min(view.pose_top_coordinate[1], view.pose_bottom_coordinate[1]))
+        pose_bottom_right = (max(view.pose_top_coordinate[0], view.pose_bottom_coordinate[0]), max(view.pose_top_coordinate[1], view.pose_bottom_coordinate[1]))
+
+        roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
+        roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
+
+        return image[roi_top_left[1]:roi_bottom_right[1], roi_top_left[0]:roi_bottom_right[0]]
 
 
 class PositionBasedHistogramMatcher(PersonMatcher):
@@ -61,5 +133,6 @@ class PositionBasedHistogramMatcher(PersonMatcher):
     and a diameter 50 cm. Then look at the best matchin person for p1 from cam1, that is p3 from cam2, and check if p3 is estimated
     to be inside of the circle (based on distance to cam2). If p3 is inside, then probably p1 == p2, if is outside, then p1 =/= p3.
     """
+
     def match(self, front_views: List[PersonView], side_views: List[PersonView]):
         raise NotImplementedError  # TODO histogram matching with verification based on person location

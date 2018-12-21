@@ -19,8 +19,8 @@ class PersonView:
     View includes detected position of person's pose.
     """
 
-    def __init__(self, camera_image, camera: Camera, pose_top_coordinate, pose_bottom_coordinate):
-        self.camera_image = camera_image
+    def __init__(self, person_image, camera: Camera, pose_top_coordinate, pose_bottom_coordinate):
+        self.person_image = person_image
         self.camera = camera
         self.pose_top_coordinate = pose_top_coordinate
         self.pose_bottom_coordinate = pose_bottom_coordinate

@@ -94,7 +94,7 @@ class PovaPose:
             if len(r[2]) != 0 and len(r[3]) != 0:
                 r_hip = r[2]
                 l_hip = r[3]
-                optimal_hip = [(r_hip[0] + l_hip[0]) / 2, (r_hip[1] + l_hip[1]) / 2]
+                optimal_hip = [int((r_hip[0] + l_hip[0]) / 2), int((r_hip[1] + l_hip[1]) / 2)]
             elif len(r[2]) != 0:
                 optimal_hip = r[2]
             else:
@@ -140,10 +140,8 @@ class PovaPose:
                     rightBottomPoint[1] = A[0]
                 if rightBottomPoint[1] < A[1]:
                     rightBottomPoint[1] = A[1]
+                # cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
 
-                """
-                    cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
-                """
             person = self.get_sub_image(leftTopPoint, rightBottomPoint, frameClone)
             structure = [[] for count in range(6)]
             """ Structure for each person
