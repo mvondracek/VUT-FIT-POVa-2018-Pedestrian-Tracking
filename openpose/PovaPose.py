@@ -59,8 +59,8 @@ class PovaPose:
     def run_multi_person_detection(self):
         """ Structure for each person
             [0] - Sub picture for person
-            [1] - Neck yx
-            [2] - Optimal hip yx (average or at least one of them)
+            [1] - Neck xy
+            [2] - Optimal hip xy (average or at least one of them)
         """
         peopleResult = []
         output = self.net.forward()
@@ -118,53 +118,53 @@ class PovaPose:
                 index = personwiseKeypoints[n][np.array(self.MULTI_POSE_PAIRS[i])]
                 if -1 in index:
                     continue
-                B = np.int32(self.keypoints_list[index.astype(int), 0])
-                A = np.int32(self.keypoints_list[index.astype(int), 1])
+                xs = np.int32(self.keypoints_list[index.astype(int), 0])
+                ys = np.int32(self.keypoints_list[index.astype(int), 1])
 
-                if leftTopPoint[0] > B[0]:
-                    leftTopPoint[0] = B[0]
-                if leftTopPoint[0] > B[1]:
-                    leftTopPoint[0] = B[1]
+                if leftTopPoint[0] > xs[0]:
+                    leftTopPoint[0] = xs[0]
+                if leftTopPoint[0] > xs[1]:
+                    leftTopPoint[0] = xs[1]
 
-                if leftTopPoint[1] > A[0]:
-                    leftTopPoint[1] = A[0]
-                if leftTopPoint[1] > A[1]:
-                    leftTopPoint[1] = A[1]
+                if leftTopPoint[1] > ys[0]:
+                    leftTopPoint[1] = ys[0]
+                if leftTopPoint[1] > ys[1]:
+                    leftTopPoint[1] = ys[1]
 
-                if rightBottomPoint[0] < B[1]:
-                    rightBottomPoint[0] = B[1]
-                if rightBottomPoint[0] < B[0]:
-                    rightBottomPoint[0] = B[0]
+                if rightBottomPoint[0] < xs[1]:
+                    rightBottomPoint[0] = xs[1]
+                if rightBottomPoint[0] < xs[0]:
+                    rightBottomPoint[0] = xs[0]
 
-                if rightBottomPoint[1] < A[0]:
-                    rightBottomPoint[1] = A[0]
-                if rightBottomPoint[1] < A[1]:
-                    rightBottomPoint[1] = A[1]
-                # cv2.line(frameClone, (B[0], A[0]), (B[1], A[1]), self.colors[i], 3, cv2.LINE_AA)
+                if rightBottomPoint[1] < ys[0]:
+                    rightBottomPoint[1] = ys[0]
+                if rightBottomPoint[1] < ys[1]:
+                    rightBottomPoint[1] = ys[1]
+                # cv2.line(frameClone, (xs[0], ys[0]), (xs[1], ys[1]), self.colors[i], 3, cv2.LINE_AA)
 
             person = self.get_sub_image(leftTopPoint, rightBottomPoint, frameClone)
             structure = [[] for count in range(6)]
             """ Structure for each person
                 [0] - Sub picture for person
-                [1] - Neck yx
-                [2] - Right hip yx
-                [3] - Left hip yx
-                [4] - Right ankle yx
-                [5] - Left ankle yx
+                [1] - Neck xy
+                [2] - Right hip xy
+                [3] - Left hip xy
+                [4] - Right ankle xy
+                [5] - Left ankle xy
             """
             structure[0] = person
             for idx, p in enumerate(self.main_points_multi):
                 index = personwiseKeypoints[n][np.array(self.MULTI_POSE_PAIRS[p])]
                 if -1 in index:
                     continue
-                B = np.int32(self.keypoints_list[index.astype(int), 0])
-                A = np.int32(self.keypoints_list[index.astype(int), 1])
+                xs = np.int32(self.keypoints_list[index.astype(int), 0])
+                ys = np.int32(self.keypoints_list[index.astype(int), 1])
 
                 """Save point"""
                 if p == 12:
-                    structure[idx + 1] = [B[0], A[0]]
+                    structure[idx + 1] = [xs[0], ys[0]]
                 else:
-                    structure[idx + 1] = [B[1], A[1]]
+                    structure[idx + 1] = [xs[1], ys[1]]
 
             cv2.rectangle(self.frameCopy, (leftTopPoint[0], leftTopPoint[1]), (rightBottomPoint[0], rightBottomPoint[1]), (255, 0, 0))
             people.append(structure)
