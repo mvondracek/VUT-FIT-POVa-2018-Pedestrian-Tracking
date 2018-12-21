@@ -15,6 +15,7 @@
 * camera M, front view, multiple people in the image
   * `s3_m_front_multi_y600.png`
   * `s3_m_front_multi.mp4`
+  * `s3_m_front_multi_bg.png` background (artificial)
 * camera F, side view (angled), multiple people in the image
   * `s3_f_side_multi_y600.png`
   * `s3_f_side_multi.mp4`
