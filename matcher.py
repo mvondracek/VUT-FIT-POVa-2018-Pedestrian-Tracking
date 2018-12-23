@@ -90,15 +90,20 @@ class HistogramMatcher(PersonMatcher):
             intersect_histcmps = []
             hellinger_histcmps = []
             for side_hist in side_histograms:
-                intersect_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_INTERSECT))
-                hellinger_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_HELLINGER))
+                if side_hist is None:  # already matched histograms are removed to not match twice
+                    intersect_histcmps.append(None)
+                    hellinger_histcmps.append(None)
+                else:
+                    intersect_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_INTERSECT))
+                    hellinger_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_HELLINGER))
 
-            best_intersect_match = intersect_histcmps.index(max(intersect_histcmps))  # INTERSECT method: HIGHER value ~ HIGHER similarity
-            best_hellinger_match = hellinger_histcmps.index(min(hellinger_histcmps))  # HELLINGER method: LOWER value ~ HIGHER similarity
-            if best_intersect_match == best_hellinger_match:
-                results.append(PersonTimeFrame([front_views[index], side_views[best_intersect_match]]))
-                side_histograms.pop(best_intersect_match)  # already matched a front_view, no need to compare it any further
-                side_views.pop(best_intersect_match)  # pop also the view itself, so indexes are not different for side_histograms and side_views
+            best_intersect_match = max(x for x in intersect_histcmps if x is not None)  # INTERSECT method: HIGHER value ~ HIGHER similarity
+            i_intersect_match = intersect_histcmps.index(best_intersect_match)
+            best_hellinger_match = min(x for x in hellinger_histcmps if x is not None)  # HELLINGER method: LOWER value ~ HIGHER similarity
+            i_hellinger_match = hellinger_histcmps.index(best_hellinger_match)
+            if i_intersect_match == i_hellinger_match:
+                results.append(PersonTimeFrame([front_views[index], side_views[i_intersect_match]]))
+                side_histograms[i_intersect_match] = None  # already matched a front_view, don't compare it any further
 
         return results
 
