@@ -73,7 +73,7 @@ class HistogramMatcher(PersonMatcher):
             torso = self.get_torso_subimage(view, self.side_img_orig)
             side_histograms.append(utils.calculate_flat_histogram(torso))
 
-        """
+
         # DEBUG CHECK
         cv2.namedWindow('tst', cv2.WINDOW_NORMAL)
         for view in front_views:
@@ -82,7 +82,7 @@ class HistogramMatcher(PersonMatcher):
         for view in side_views:
             cv2.imshow('tst', view.person_image)
             cv2.waitKey()
-        """
+
         # FIXME add a threshold? Currently the values are too diverse and any threshold is useless.
         # Multiple hist-cmp methods are used for matching. Views are matched only if all methods agree on the best match.
         results = []
@@ -103,7 +103,8 @@ class HistogramMatcher(PersonMatcher):
             i_hellinger_match = hellinger_histcmps.index(best_hellinger_match)
             if i_intersect_match == i_hellinger_match:
                 results.append(PersonTimeFrame([front_views[index], side_views[i_intersect_match]]))
-                side_histograms[i_intersect_match] = None  # already matched a front_view, don't compare it any further
+                print(i_intersect_match)
+                # TODO side_histograms[i_intersect_match] = None  # already matched a front_view, don't compare it any further
 
         return results
 

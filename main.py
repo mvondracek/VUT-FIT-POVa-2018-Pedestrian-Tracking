@@ -78,6 +78,8 @@ def main() -> ExitCode:
     front_image = cv2.imread('testing_data/s3_m_front_multi_y600.png')  # TODO Implement image provider.
     side_image = cv2.imread('testing_data/s3_f_side_multi_y600.png')  # TODO Implement image provider.
     # TODO calibrate images based on color of the same real-world point in the both of them
+    #import utils
+    #front_image, side_image = utils.utils.synchronize_colors(front_image, side_image, None, None)
 
     logger.info('detecting people')
     front_views = detector.detect(front_image, camera_front)
