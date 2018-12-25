@@ -4,19 +4,59 @@ import cv2
 import numpy as np
 
 
-def synchronize_colors(image1, image2, point1, point2):
-    # TODO zkusit proovnavat body, rectangle prumer, nebo prevest do jineho formatu a upravit jas - HSV / LAB
-    #image1 = cv2.imread('../testing_data/s3_m_front_multi_y600.png')  # TODO Implement image provider.
-    #image2 = cv2.imread('../testing_data/s3_f_side_multi_y600.png')  # TODO Implement image provider.
+def synchronize_colors(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO rename
+    """#TODO"""
+    # windows for interactive selection
+    window1 = None
+    window2 = None
+    if interactive:
+        raise NotImplementedError  # TODO implement manual selection of image mask by mouse
+        window1 = 'image1_interactive_mask_selection'
+        cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
+        window2 = 'image2_interactive_mask_selection'
+        cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
+        cv2.imshow(window1, image1)
+        cv2.imshow(window2, image2)
+        cv2.waitKey()
 
-    window1 = 'img111'
-    cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
-    window2 = 'img222'
-    cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
-    cv2.imshow(window1, image1)
-    cv2.imshow(window2, image2)
-    #cv2.waitKey()
-    #################################################
+    # count mean values of color channels and their ratio between image1 and image2
+    means1, _ = cv2.meanStdDev(image1, mask=mask1)
+    means2, _ = cv2.meanStdDev(image2, mask=mask2)
+    ratios = means1 / means2
+    ratios = ratios.flatten()  # shape (3,1) -> shape (3); just 1 non-nested value for each color channel
+
+    # adjust image2, so it should be more similar to image1
+    image1 = image1.astype(np.float16)
+    image2 = image2.astype(np.float16)
+    image2[:, :] = image2[:, :] * ratios
+    np.clip(image2, a_min=0, a_max=255, out=image2)
+    image1 = image1.astype(np.uint8)
+    image2 = image2.astype(np.uint8)
+
+    if interactive:
+        cv2.imshow(window1, image1)
+        cv2.imshow(window2, image2)
+        cv2.waitKey()
+
+    return image1, image2
+
+
+synchronize_colors(None, None, None, None, interactive=True)  # TODO
+
+def synchronize_light(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO rename
+    """TODO"""
+    # TODO zkusit rectangle prumer, nebo prevest do jineho formatu a upravit jas - HSV / LAB
+    image1 = cv2.imread('../testing_data/s3_m_front_multi_y600.png')  # TODO Implement image provider.
+    image2 = cv2.imread('../testing_data/s3_f_side_multi_y600.png')  # TODO Implement image provider.
+    if interactive:
+        raise NotImplementedError  # TODO implement manual selection of image mask by mouse
+        window1 = 'image1_interactive_mask_selection'
+        cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
+        window2 = 'image2_interactive_mask_selection'
+        cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
+        cv2.imshow(window1, image1)
+        cv2.imshow(window2, image2)
+        cv2.waitKey()
 
     image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2LAB)
     image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2LAB)
@@ -45,61 +85,12 @@ def synchronize_colors(image1, image2, point1, point2):
 
     image1 = cv2.cvtColor(image1, cv2.COLOR_LAB2BGR)
     image2 = cv2.cvtColor(image2, cv2.COLOR_LAB2BGR)
-
-    cv2.imshow(window1, image1)
-    cv2.imshow(window2, image2)
-    #cv2.waitKey()
+    if interactive:
+        cv2.imshow(window1, image1)
+        cv2.imshow(window2, image2)
+        cv2.waitKey()
 
     return image1, image2
-
-
-#synchronize_colors(None, None, None, None)  # TODO
-
-def synchronize_colors_TODOjedenpixel_barvy(image1, image2, point1, point2):
-    """
-    TODO
-    :param image1:
-    :param image2:
-    :param point1:
-    :param point2:
-    :return:
-    """
-    image1 = cv2.imread('../testing_data/s3_m_front_multi_y600.png')  # TODO Implement image provider.
-    image2 = cv2.imread('../testing_data/s3_f_side_multi_y600.png')  # TODO Implement image provider.
-    # TODO zkusit proovnavat body, rectangle prumer, nebo prevest do jineho formatu a upravit jas
-    point1 = (1190, 590)
-    point2 = (135, 480)
-
-    window1 = 'img111'
-    cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
-    window2 = 'img222'
-    cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
-    cv2.imshow(window1, image1)
-    cv2.imshow(window2, image2)
-    cv2.waitKey()
-
-    image1 = image1.astype(np.float16)
-    image2 = image2.astype(np.float16)
-    pixel1 = image1[point1[1], point1[0]]
-    pixel2 = image2[point1[1], point1[0]]
-    print(image1.dtype)
-    print(pixel1)
-    print(pixel2)
-    ratios = pixel1 / pixel2
-    print(ratios)
-
-    image2 = image2[:, :] * ratios
-
-    #frame = np.clip(image2, 0, 255)
-    image1 = image1.astype(np.uint8)
-    image2 = image2.astype(np.uint8)
-
-    pixel2 = image2[point1[1], point1[0]]
-    print(pixel2)
-
-    cv2.imshow(window1, image1)
-    cv2.imshow(window2, image2)
-    cv2.waitKey()
 
 
 def calculate_flat_histogram(image):
