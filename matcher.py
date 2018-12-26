@@ -83,6 +83,7 @@ class HistogramMatcher(PersonMatcher):
             cv2.imshow('tst', view.person_image)
             cv2.waitKey()
         """
+
         # FIXME add a threshold? Currently the values are too diverse and any threshold is useless.
         # Multiple hist-cmp methods are used for matching. Views are matched only if all methods agree on the best match.
         results = []
@@ -104,6 +105,7 @@ class HistogramMatcher(PersonMatcher):
             if i_intersect_match == i_hellinger_match:
                 results.append(PersonTimeFrame([front_views[index], side_views[i_intersect_match]]))
                 side_histograms[i_intersect_match] = None  # already matched a front_view, don't compare it any further
+                # TODO if one person is left in both screens, it is matched even if totally different - threshold could fix it, but threshold is impossible now
 
         return results
 
@@ -125,7 +127,7 @@ class HistogramMatcher(PersonMatcher):
         roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
         roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
 
-        return image[roi_top_left[1]:roi_bottom_right[1], roi_top_left[0]:roi_bottom_right[0]]
+        return image[roi_top_left[1]:roi_bottom_right[1]+1, roi_top_left[0]:roi_bottom_right[0]+1]
 
 
 class PositionBasedHistogramMatcher(PersonMatcher):
