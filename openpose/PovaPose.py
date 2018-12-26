@@ -179,7 +179,7 @@ class PovaPose:
 
     @staticmethod
     def get_sub_image(left_top_point, right_bottom_point, frame_clone):
-        return frame_clone[left_top_point[1]:right_bottom_point[1], left_top_point[0]:right_bottom_point[0]]
+        return frame_clone[left_top_point[1]:right_bottom_point[1]+1, left_top_point[0]:right_bottom_point[0]+1]
 
     def getKeypoints(self, probMap):
         mapSmooth = cv2.GaussianBlur(probMap, (3, 3), 0, 0)

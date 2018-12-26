@@ -126,7 +126,7 @@ class HistogramMatcher(PersonMatcher):
         roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
         roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
 
-        return image[roi_top_left[1]:roi_bottom_right[1], roi_top_left[0]:roi_bottom_right[0]]
+        return image[roi_top_left[1]:roi_bottom_right[1]+1, roi_top_left[0]:roi_bottom_right[0]+1]
 
 
 class PositionBasedHistogramMatcher(PersonMatcher):
