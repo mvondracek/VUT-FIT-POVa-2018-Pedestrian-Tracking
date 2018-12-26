@@ -48,42 +48,39 @@ class RectangleSelectionCallback:
         self.bottom_right[1] = min(self._image_height, max(self._point2[1], self._point2[1]))
 
 
-def synchronize_images(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO rename
-    """#TODO"""
-    # windows for interactive selection
+def draw_rectangle_mask_using_mouse(window_name, image):
+    """TODO"""
+    rect_selection = RectangleSelectionCallback(image.shape[1], image.shape[0])
+
+    image_copy = image.copy()
+    cv2.imshow(window_name, image_copy)
+    cv2.setMouseCallback(window_name, rect_selection.mouse_callback)
+    cv2.waitKey()  # wait until the mask area is selected
+    assert rect_selection.selection_finished, "No rectangle detected in window: {}".format(window_name)
+
+    # TODO draw the rectangle in imview
+    mask = np.zeros(image.shape[0:2], dtype=np.uint8)  # mask needs to has one dimension less
+    mask[rect_selection.top_left[1]:rect_selection.bottom_right[1] + 1, rect_selection.top_left[0]:rect_selection.bottom_right[0] + 1] = 1
+
+    return mask
+
+
+def synchronize_images(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO move to image provider, add logging (select, selected 1 and 2)
+    """TODO"""
+    # windows used only if interactive selection
     window1 = None
     window2 = None
     if interactive:
-        image1_copy = image1.copy()
-        image2_copy = image2.copy()
+        window1 = 'Sync Images - image 1: interactive mask selection'
+        window2 = 'Sync Images - image 2: interactive mask selection'
+        mask1 = draw_rectangle_mask_using_mouse(window1, image1)
+        mask2 = draw_rectangle_mask_using_mouse(window2, image2)
 
-        window1 = 'image1_interactive_mask_selection'
-        window2 = 'image2_interactive_mask_selection'
-        cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
-        cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
-
-        rectangle1 = RectangleSelectionCallback(image1.shape[1], image1.shape[0])
-        rectangle2 = RectangleSelectionCallback(image2.shape[1], image2.shape[0])
-        cv2.setMouseCallback(window1, rectangle1.mouse_callback)
-        cv2.setMouseCallback(window2, rectangle2.mouse_callback)
-
-        # FIXME after moving to image rpovider uncomment: logger.info("Select a rectangle in both images, then press any key.")
-        cv2.imshow(window1, image1_copy)
-        cv2.imshow(window2, image2_copy)
-        cv2.waitKey()  # wait until the mask area is selected for both images
-        assert rectangle1.selection_finished and rectangle2.selection_finished, "Rectangle must be selected in both images!"
-
-        # TODO draw the rectangle
-
-        mask1 = np.zeros(image1.shape[0:2], dtype=np.uint8)  # mask needs to has one dimension less
-        mask2 = np.zeros(image2.shape[0:2], dtype=np.uint8)
-        mask1[rectangle1.top_left[1]:rectangle1.bottom_right[1]+1, rectangle1.top_left[0]:rectangle1.bottom_right[0]+1] = 1
-        mask2[rectangle2.top_left[1]:rectangle2.bottom_right[1]+1, rectangle2.top_left[0]:rectangle2.bottom_right[0]+1] = 1
-        # TODO add +1 to all subimage selections
-
+    # adjust image2 (based on image1), image1 is untouched
     image1, image2 = synchronize_images_colors(image1, image2, mask1=mask1, mask2=mask2, interactive=False)
     image1, image2 = synchronize_images_light_intensity(image1, image2, mask1=mask1, mask2=mask2, interactive=False)
 
+    # show results in interactive mode (to see the changes)
     if interactive:
         cv2.imshow(window1, image1)
         cv2.imshow(window2, image2)
@@ -93,19 +90,15 @@ def synchronize_images(image1, image2, mask1=None, mask2=None, interactive=False
 
 
 def synchronize_images_colors(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO rename
-    """#TODO"""
-    # windows for interactive selection
+    """TODO"""
+    # windows used only if interactive selection
     window1 = None
     window2 = None
     if interactive:
-        raise NotImplementedError  # TODO implement manual selection of image mask by mouse
-        window1 = 'image1_interactive_mask_selection'
-        cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
-        window2 = 'image2_interactive_mask_selection'
-        cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
-        cv2.imshow(window1, image1)
-        cv2.imshow(window2, image2)
-        cv2.waitKey()
+        window1 = 'Sync Images Colors - image 1: interactive mask selection'
+        window2 = 'Sync Images Colors - image 2: interactive mask selection'
+        mask1 = draw_rectangle_mask_using_mouse(window1, image1)
+        mask2 = draw_rectangle_mask_using_mouse(window2, image2)
 
     # count mean values of color channels and their ratio between image1 and image2
     means1, _ = cv2.meanStdDev(image1, mask=mask1)
@@ -121,6 +114,7 @@ def synchronize_images_colors(image1, image2, mask1=None, mask2=None, interactiv
     image1 = image1.astype(np.uint8)
     image2 = image2.astype(np.uint8)
 
+    # show results in interactive mode (to see the changes)
     if interactive:
         cv2.imshow(window1, image1)
         cv2.imshow(window2, image2)
@@ -131,36 +125,39 @@ def synchronize_images_colors(image1, image2, mask1=None, mask2=None, interactiv
 
 def synchronize_images_light_intensity(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO rename
     """TODO"""
+    # windows used only if interactive selection
+    window1 = None
+    window2 = None
     if interactive:
-        raise NotImplementedError  # TODO implement manual selection of image mask by mouse
-        window1 = 'image1_interactive_mask_selection'
-        cv2.namedWindow(window1, cv2.WINDOW_NORMAL)
-        window2 = 'image2_interactive_mask_selection'
-        cv2.namedWindow(window2, cv2.WINDOW_NORMAL)
-        cv2.imshow(window1, image1)
-        cv2.imshow(window2, image2)
-        cv2.waitKey()
+        window1 = 'Sync Images Lightness - image 1: interactive mask selection'
+        window2 = 'Sync Images Lightness - image 2: interactive mask selection'
+        mask1 = draw_rectangle_mask_using_mouse(window1, image1)
+        mask2 = draw_rectangle_mask_using_mouse(window2, image2)
 
+    # convert images to LAB format: L = Lightness (intensity); A = color component (Green to Magenta); B – color component (Blue to Yellow)
     light_channel = 0
     image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2LAB)
     image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2LAB)
 
-    # get mean value of lightness
+    # get ratio of lightness between the images
     mean1, _ = cv2.meanStdDev(image1[:, :, light_channel], mask=mask1)
     mean2, _ = cv2.meanStdDev(image2[:, :, light_channel], mask=mask2)
     ratio = mean1 / mean2
     ratio = ratio.flatten()  # just 1 non-nested value
 
+    # adjust image 2, so it matches mean lightness of image 1
     image1 = image1.astype(np.float16)
     image2 = image2.astype(np.float16)
     image2[:, :, light_channel] = image2[:, :, light_channel] * ratio
     np.clip(image2, a_min=0, a_max=255, out=image2)
 
+    # convert images back to BGR
     image1 = image1.astype(np.uint8)
     image2 = image2.astype(np.uint8)
     image1 = cv2.cvtColor(image1, cv2.COLOR_LAB2BGR)
     image2 = cv2.cvtColor(image2, cv2.COLOR_LAB2BGR)
 
+    # show results in interactive mode (to see the changes)
     if interactive:
         cv2.imshow(window1, image1)
         cv2.imshow(window2, image2)
