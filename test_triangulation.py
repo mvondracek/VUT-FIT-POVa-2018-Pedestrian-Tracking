@@ -157,6 +157,8 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
             person = people[0]
             return PersonView(image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
 
+        max_delta = 35
+
         # distance 300
         front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png')
         side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x0y300.png')
@@ -166,9 +168,9 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
 
         located = self.triangulation.locate(person_time_frame)
         # plot_person_time_frame(located) # for debugging
-        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=30)
-        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=30)
-        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=30)
+        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
 
         # distance 600
         front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png')
@@ -179,6 +181,6 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
 
         located = self.triangulation.locate(person_time_frame)
         # plot_person_time_frame(located) # for debugging
-        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=30)
-        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=30)
-        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=30)
+        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
