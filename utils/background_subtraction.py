@@ -6,8 +6,6 @@ FIT - Faculty of Information Technology
 BUT - Brno University of Technology
 """
 
-
-import numpy as np
 import cv2 as cv
 
 
@@ -19,12 +17,12 @@ import cv2 as cv
 # Another problem is that M and F cameras change exposure during recording, therefore background image is changing.
 #
 def mog2():
-    fgbg = cv.createBackgroundSubtractorMOG2(detectShadows=False)
+    subtractor = cv.createBackgroundSubtractorMOG2(detectShadows=False)
     cap = cv.VideoCapture('../testing_data/s3_m_front_multi.mp4')
 
     while True:
         ret, frame = cap.read()
-        fgmask = fgbg.apply(frame)
+        fgmask = subtractor.apply(frame)
         cv.imshow('frame', frame)
         cv.imshow('mask', fgmask)
         k = cv.waitKey(30) & 0xff
@@ -45,9 +43,9 @@ def subtract():
         ret, frame_color = cap.read()
         frame = cv.cvtColor(frame_color, cv.COLOR_BGR2GRAY)
         fgmask = cv.subtract(bg, frame)
-        _, fgmask_tresh = cv.threshold(fgmask, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        _, fgmask_threshold = cv.threshold(fgmask, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
         cv.imshow('frame', frame)
-        cv.imshow('mask', fgmask_tresh)
+        cv.imshow('mask', fgmask_threshold)
         k = cv.waitKey(30) & 0xff
         if k == 27:
             break
@@ -57,5 +55,6 @@ def subtract():
 
 
 if __name__ == '__main__':
-    #subtract()
-    #mog2()
+    # subtract()
+    # mog2()
+    pass
