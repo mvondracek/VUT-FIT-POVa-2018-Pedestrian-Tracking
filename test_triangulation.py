@@ -5,7 +5,6 @@ POVa - Computer Vision
 FIT - Faculty of Information Technology
 BUT - Brno University of Technology
 """
-import datetime
 from unittest import TestCase
 
 import cv2
@@ -127,8 +126,8 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         self.camera_f = Camera(
             name='f (side camera)',
             focal_length=FOCAL_LENGTH_CAMERA_F,
-            position=(200, 0, 147),
-            orientation=(-1, 1, 0)
+            position=(-200, 0, 147),
+            orientation=(1, 1, 0)
         )
         self.person_detector = openpose.PovaPose.PovaPose(
             prototxt_path="openpose/pose/coco/pose_deploy_linevec.prototxt",
@@ -147,7 +146,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
             self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
 
         assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 20)
-        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png', 600, 20)
+        assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png', 600, 20)
 
     def test_locate(self):
         def create_person_view(camera, image_path):
@@ -172,8 +171,8 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=30)
 
         # distance 600
-        front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x-50y600.png')
-        side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x-50y600.png')
+        front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png')
+        side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x50y600.png')
 
         person_time_frame = PersonTimeFrame([front_view, side_view])
         person_time_frame.real_subject_coordinates_3d = (0, 600, 147)
