@@ -7,45 +7,75 @@ BUT - Brno University of Technology
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import Tuple
 
 import cv2
-import numpy as np
-
-from person import PersonTimeFrame, PersonView
-from utils import utils
 
 logger = logging.getLogger(__name__)
 
 
 class ImageProvider(ABC):
-    """ ImageProvider should provide pairs of front & side images. Image pairs should be provided in a chronological order. """
+    """ Iterator provides tuples of images, 1 from each camera. Tuples should be provided in a chronological order. """
     @abstractmethod
-    def get_next_images(self) -> Tuple:
-        """Load next available image pair (front image & side image)."""
+    def __iter__(self):
+        """ Return the iterator object - most probably self. """
+        pass
+
+    @abstractmethod
+    def __next__(self) -> Tuple:
+        """ Load next step images. Must raise StopIteration if no more items. """
         pass
 
 
 class DummyImageProvider(ImageProvider):
-    """Dummy provider provides the same predefined pair of images infinitely."""
+    """Dummy provider provides a predefined pair of images ONLY ONCE."""
     def __init__(self, front_image_path, side_image_path):
         self.front_image = cv2.imread(front_image_path)
         self.side_image = cv2.imread(side_image_path)
+        self.finished = False
 
-    def get_next_images(self) -> Tuple:
-        return self.front_image, self.side_image
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple:
+        if self.finished:
+            raise StopIteration
+        else:
+            self.finished = True
+            return self.front_image, self.side_image
 
 
 class ImageProviderFromVideo(ImageProvider):
-    def __init__(self, front_video_path, side_video_path):
-        self.front_video = cv2.VideoCapture(front_video_path)
-        self.side_video = cv2.VideoCapture(side_video_path)
+    """ Load images from given video(s). """
+    def __init__(self, paths_to_videos):
+        self.finished = False
+        self.videos = []
+        for path in paths_to_videos:
+            video = cv2.VideoCapture(path)
+            self.videos.append(video)
+            if not video.isOpened():
+                raise IOError("Image provider failed to open a video. Path: {}".format(path))
 
-    def get_next_images(self) -> Tuple:
-        ret1, front = self.front_video.read()
-        ret2, side = self.side_video.read()
-        if ret1 is None or ret2 is None:
-            logger.info("Video stream ended.")
-            return None, None
-        else:
-            return front, side
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple:
+        if self.finished:
+            raise StopIteration
+
+        images = []
+        for video in self.videos:
+            ret, frame = video.read()
+            if not ret:
+                logger.debug("Video stream has ended.")
+                self.finished = True
+                self._release_videos()
+                raise StopIteration
+            else:
+                images.append(frame)
+
+        return tuple(images)
+
+    def _release_videos(self):
+        """OpenCV video readers' resources should be released properly."""
+        map(lambda video: video.release(), self.videos)
