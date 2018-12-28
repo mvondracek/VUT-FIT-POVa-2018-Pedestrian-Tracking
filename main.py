@@ -12,14 +12,13 @@ import warnings
 from enum import unique, Enum
 
 import coloredlogs as coloredlogs
-import cv2
 
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from detector import OpenPoseDetector, PeopleDetector
-from image_provider import ImageProvider, DummyImageProvider, ImageProviderFromVideo
+from image_provider import ImageProvider, ImageProviderFromVideo
 from matcher import PersonMatcher, HistogramMatcher
-from tracker import NullTracker, PersonTracker, PositionAndHistogramTracker
+from tracker import NullTracker, PersonTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
 from visualizer import Plotter3D, Visualizer
 
