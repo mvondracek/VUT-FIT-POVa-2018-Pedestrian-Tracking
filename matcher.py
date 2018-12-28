@@ -105,6 +105,8 @@ class HistogramMatcher(PersonMatcher):
                 # TODO if one person is left in both screens, it is matched even if totally different - threshold could fix it, but threshold is impossible now
 
         logger.debug('matched {} time frames'.format(len(results)))
+        if min(len(front_views), len(side_views)) != len(results):
+            logger.warning('Some input views are not matched.')
         return results
 
 
