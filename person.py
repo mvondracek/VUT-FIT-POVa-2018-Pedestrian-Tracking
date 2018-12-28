@@ -122,7 +122,6 @@ def plot_person_time_frame(person_time_frame: PersonTimeFrame):
     ax.set_ylabel('y [mm]')
     ax.set_zlabel('z [mm]')
     ax.legend()
-    ax.set_zlim(0, plot_size_z)
     plt.show()
 
 
