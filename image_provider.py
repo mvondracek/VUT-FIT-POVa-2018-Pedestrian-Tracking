@@ -28,22 +28,22 @@ class ImageProvider(ABC):
 
 
 class DummyImageProvider(ImageProvider):
-    """Dummy provider provides a predefined pair of images ONLY ONCE."""
-    def __init__(self, front_image_path, side_image_path):
+    """Dummy provider provides a predefined pair of images for a number of iterations."""
+    def __init__(self, front_image_path, side_image_path, iterations: int = 1):
         logger.debug('Using DummyImageProvider as ImageProvider.')
         self.front_image = cv2.imread(front_image_path)
         self.side_image = cv2.imread(side_image_path)
-        self.finished = False
+        self.iterations = iterations
 
     def __iter__(self):
         return self
 
     def __next__(self) -> Tuple:
-        if self.finished:
-            raise StopIteration
-        else:
-            self.finished = True
+        if self.iterations > 0:
+            self.iterations -= 1
             return self.front_image, self.side_image
+        else:
+            raise StopIteration
 
 
 class ImageProviderFromVideo(ImageProvider):
