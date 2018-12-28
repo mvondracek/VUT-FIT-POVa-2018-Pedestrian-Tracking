@@ -12,15 +12,15 @@ import warnings
 from enum import unique, Enum
 
 import coloredlogs as coloredlogs
-import cv2
 
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from detector import OpenPoseDetector, PeopleDetector
-from image_provider import ImageProvider, DummyImageProvider, ImageProviderFromVideo
+from image_provider import ImageProvider, ImageProviderFromVideo
 from matcher import PersonMatcher, HistogramMatcher
-from tracker import NullTracker, PersonTracker, PositionAndHistogramTracker
+from tracker import NullTracker, PersonTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
+from visualizer import Plotter3D, Visualizer
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ def main() -> ExitCode:
     logging.captureWarnings(True)
     warnings.simplefilter('always', ResourceWarning)
     coloredlogs.install(level=logging.DEBUG)
+    logging.getLogger('matplotlib').setLevel(logging.INFO)
     logger.debug('main started')
 
     # region Initialization
@@ -64,16 +65,20 @@ def main() -> ExitCode:
     camera_side = Camera(
         name='side camera (f)',
         focal_length=FOCAL_LENGTH_CAMERA_F,
-        position=(200, 0, z_level),
-        orientation=(-1, 1, 0)
+        position=(-200, 0, z_level),
+        orientation=(1, 1, 0)
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
-    image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_multi_y600.png', side_image_path='testing_data/s3_f_side_multi_y600.png')  # type: ImageProvider
+    image_provider = ImageProviderFromVideo(
+        ['testing_data/s3_m_front_multi.mp4', 'testing_data/s3_f_side_multi.mp4'],
+        start=25*30,  # start after first 25 seconds
+        skipping=30)  # type: ImageProvider # provide each 30th frame (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = NullTracker()  # type: PersonTracker
+    visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
     for i, image_set in enumerate(image_provider):
@@ -88,11 +93,19 @@ def main() -> ExitCode:
         matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
         time_frames = matcher.match(front_views, side_views)
 
-        logger.info('locating and tracking people')
+        logger.info('locating people')
+        time_frames_located = []
         for time_frame in time_frames:
-            person = tracker.track(triangulation.locate(time_frame))
+            located_frame = triangulation.locate(time_frame)
+            time_frames_located.append(located_frame)
+
+        logger.info('tracking people')
+        for time_frame in time_frames_located:
+            person = tracker.track(time_frame)
             logger.info("Time={}, Person={}, 3D={}"
                         .format(person.time_frames[-1].time, person.name, person.time_frames[-1].coordinates_3d))
+
+        visualizer.render()
 
     return ExitCode.EX_OK
 

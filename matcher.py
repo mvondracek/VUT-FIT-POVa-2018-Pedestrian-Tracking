@@ -52,6 +52,7 @@ class NullMatcher(PersonMatcher):
 
 class HistogramMatcher(PersonMatcher):
     def __init__(self):
+        logger.debug('Using HistogramMatcher as PersonMatcher.')
         self.front_img_orig = None
         self.side_img_orig = None
 
