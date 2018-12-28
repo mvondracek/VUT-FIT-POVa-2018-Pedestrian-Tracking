@@ -63,14 +63,8 @@ class ImageProviderFromVideo(ImageProvider):
                 raise IOError("Image provider failed to open a video. Path: {}".format(path))
 
         self.skipping = skipping
-
-        for i in range(start):
-            for video in self.videos:
-                # TODO: mvondracek: is there a better way how to skip several frames?
-                _, frame = video.read()
-                if __debug__:
-                    cv2.imshow('ImageProviderFromVideo={} video={}'.format(id(self), id(video)), frame)
-                    cv2.waitKey(1)
+        for video in self.videos:
+            video.set(cv2.CAP_PROP_POS_FRAMES, start)
 
     def __iter__(self):
         return self
@@ -81,14 +75,9 @@ class ImageProviderFromVideo(ImageProvider):
 
         images = []
         for video in self.videos:
-            ret, frame = None, None
-            for i in range(self.skipping):
-                # TODO: mvondracek: is there a better way how to skip several frames?
-                ret, frame = video.read()
-                if __debug__:
-                    cv2.imshow('ImageProviderFromVideo={} video={}'.format(id(self), id(video)), frame)
-                    cv2.waitKey(1)
-
+            position = video.get(cv2.CAP_PROP_POS_FRAMES)
+            video.set(cv2.CAP_PROP_POS_FRAMES, position + self.skipping)
+            ret, frame = video.read()
             if not ret:
                 logger.debug("Video stream has ended.")
                 self.finished = True
@@ -96,6 +85,12 @@ class ImageProviderFromVideo(ImageProvider):
                 raise StopIteration
             else:
                 images.append(frame)
+                if __debug__:
+                    window_name = 'ImageProviderFromVideo={} video={}'.format(id(self), id(video))
+                    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+                    cv2.imshow(window_name, frame)
+                    cv2.resizeWindow(window_name, 384, 216)
+                    cv2.waitKey(1)
 
         return tuple(images)
 
