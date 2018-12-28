@@ -76,6 +76,8 @@ def main() -> ExitCode:
     image_provider = ImageProviderFromVideo(
          ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
          start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
+         #['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
+         #start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
          skipping=30)  # type: ImageProvider # (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
