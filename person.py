@@ -159,6 +159,6 @@ class Person:
 
     def __init__(self, time_frame: PersonTimeFrame, name: str = None):
         if name is None:
-            name = "unknown person id={0}".format(id(self))
+            name = "person id={0}".format(id(self))
         self.name = name
         self.time_frames = [time_frame]
