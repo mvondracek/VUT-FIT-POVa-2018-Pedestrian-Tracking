@@ -74,11 +74,11 @@ def main() -> ExitCode:
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
     image_provider = ImageProviderFromVideo(
-         ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
-         start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
-         # ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
-         # start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
-         skipping=30)  # type: ImageProvider # (30 fps)
+         # ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
+         # start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
+         ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
+         start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
+         skipping=10)  # type: ImageProvider # (30 fps)
     # image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_single_x0y300.png',
     #                                     side_image_path='testing_data/s3_f_side_single_x0y300.png',
     #                                     iterations=3
