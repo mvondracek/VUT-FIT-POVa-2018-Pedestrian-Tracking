@@ -44,8 +44,10 @@ class TestCameraDistanceTriangulationScene1Duck(TestCase):
         camera_side = Camera('side camera', focal_length, (400, 400, 30), (-1, -1, 0))
 
         # reference = PersonView(cv2.imread('testing_data/s1_front_d150_h50.jpg'), camera_front, (379, 70), (379, 299))
-        self.front = PersonView(cv2.imread('testing_data/s1_front_d400.jpg'), camera_front, (383, 95), (383, 11))
-        self.side = PersonView(cv2.imread('testing_data/s1_side_d500.jpg'), camera_side, (77, 86), (77, 18))
+        image_front = cv2.imread('testing_data/s1_front_d400.jpg')
+        self.front = PersonView(image_front, image_front, camera_front, (383, 95), (383, 11))
+        image_side = cv2.imread('testing_data/s1_side_d500.jpg')
+        self.side = PersonView(image_side, image_side, camera_side, (77, 86), (77, 18))
 
         self.person_time_frame = PersonTimeFrame([self.front, self.side])
         self.person_time_frame.real_subject_coordinates_3d = (50, 50, 30)
@@ -100,7 +102,7 @@ class TestCameraDistanceTriangulationSceneLibrary(TestCase):
             people = self.person_detector.run_multi_person_detection()
             self.assertEqual(len(people), 1, "Detected incorrect number of people.")
             person = people[0]
-            view = PersonView(image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+            view = PersonView(image, image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
             self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
 
         assert_distance(self.camera_f, 'testing_data/s2_f_x0y300.png', 300, 15)
@@ -142,7 +144,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
             people = self.person_detector.run_multi_person_detection()
             self.assertEqual(len(people), 1, "Detected incorrect number of people.")
             person = people[0]
-            view = PersonView(image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+            view = PersonView(image, image, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
             self.assertAlmostEqual(self.triangulation.distance_from_camera(view), distance, delta=delta)
 
         assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 20)
@@ -155,7 +157,7 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
             people = self.person_detector.run_multi_person_detection()
             self.assertEqual(len(people), 1, "Detected incorrect number of people.")
             person = people[0]
-            return PersonView(image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+            return PersonView(image_front, image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
 
         max_delta = 35
 

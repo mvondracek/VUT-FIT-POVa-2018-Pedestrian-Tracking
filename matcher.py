@@ -53,25 +53,17 @@ class NullMatcher(PersonMatcher):
 class HistogramMatcher(PersonMatcher):
     def __init__(self):
         logger.debug('Using HistogramMatcher as PersonMatcher.')
-        self.front_img_orig = None
-        self.side_img_orig = None
-
-    # FIXME: this won't be needed if "whole person image" is implemented and passed from detector->person_view->match
-    def set_original_images(self, front_image, side_image):
-        """ Each step set original images, so it is possibel to extract a torso area from them. """
-        self.front_img_orig = front_image
-        self.side_img_orig = side_image
 
     # TODO optimalization: differ clear image and image with people -> whole person box -> could be better for histograms
     def match(self, front_views: List[PersonView], side_views: List[PersonView]) -> List[PersonTimeFrame]:
         front_histograms = []
         side_histograms = []
         for view in front_views:
-            torso = self.get_torso_subimage(view, self.front_img_orig)
+            torso = view.get_torso_subimage()
             front_histograms.append(utils.calculate_flat_histogram(torso))
 
         for view in side_views:
-            torso = self.get_torso_subimage(view, self.side_img_orig)
+            torso = view.get_torso_subimage()
             side_histograms.append(utils.calculate_flat_histogram(torso))
 
         """
@@ -112,26 +104,6 @@ class HistogramMatcher(PersonMatcher):
                 # TODO if one person is left in both screens, it is matched even if totally different - threshold could fix it, but threshold is impossible now
 
         return results
-
-    @staticmethod
-    def get_torso_subimage(view, image):
-        """
-        Extract a subimage of just a torso for given person view. Should be better for histograms since contains less surroundings than the whole person box.
-        :param view: PersonView to find the torso coordinates for
-        :param image: original image, the torso is extracted from this image
-        :return: subimage containing only the torso
-        """
-        image_width = image.shape[1]
-        body_height = int(utils.euclidean_distance(view.pose_top_coordinate, view.pose_bottom_coordinate))
-        half_body_width = int(body_height / 6)  # an average body's width from side is about one third of the height (half of the height from front)
-
-        pose_top_left = (min(view.pose_top_coordinate[0], view.pose_bottom_coordinate[0]), min(view.pose_top_coordinate[1], view.pose_bottom_coordinate[1]))
-        pose_bottom_right = (max(view.pose_top_coordinate[0], view.pose_bottom_coordinate[0]), max(view.pose_top_coordinate[1], view.pose_bottom_coordinate[1]))
-
-        roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
-        roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
-
-        return image[roi_top_left[1]:roi_bottom_right[1]+1, roi_top_left[0]:roi_bottom_right[0]+1]
 
 
 class PositionBasedHistogramMatcher(PersonMatcher):

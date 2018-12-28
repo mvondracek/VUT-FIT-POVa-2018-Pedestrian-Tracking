@@ -94,7 +94,6 @@ def main() -> ExitCode:
             side_views = detector.detect(side_image, camera_side)
 
             logger.info('matching people')
-            matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
             time_frames = matcher.match(front_views, side_views)
 
             logger.info('locating people')

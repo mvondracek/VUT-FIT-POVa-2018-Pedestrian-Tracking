@@ -11,6 +11,7 @@ from typing import List
 import numpy as np
 
 from camera import Camera
+from utils import utils
 
 
 class PersonView:
@@ -19,11 +20,37 @@ class PersonView:
     View includes detected position of person's pose.
     """
 
-    def __init__(self, person_image, camera: Camera, pose_top_coordinate, pose_bottom_coordinate):
+    def __init__(self, original_image, person_image, camera: Camera, pose_top_coordinate, pose_bottom_coordinate):
+        """
+        :param original_image: original full-size image from camera
+        :param person_image: image containing this person
+        """
+        self.original_image = original_image
         self.person_image = person_image
         self.camera = camera
         self.pose_top_coordinate = pose_top_coordinate
         self.pose_bottom_coordinate = pose_bottom_coordinate
+
+    def get_torso_subimage(self):
+        """
+        Extract a subimage of just a torso for given person view.
+        Should be better for histograms since contains less surroundings than the whole person box.
+        :return: subimage containing only the torso
+        """
+        image_width = self.original_image.shape[1]
+        body_height = int(utils.euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
+        # an average body's width from side is about one third of the height (half of the height from front)
+        half_body_width = int(body_height / 6)
+
+        pose_top_left = (min(self.pose_top_coordinate[0], self.pose_bottom_coordinate[0]),
+                         min(self.pose_top_coordinate[1], self.pose_bottom_coordinate[1]))
+        pose_bottom_right = (max(self.pose_top_coordinate[0], self.pose_bottom_coordinate[0]),
+                             max(self.pose_top_coordinate[1], self.pose_bottom_coordinate[1]))
+
+        roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
+        roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
+
+        return self.original_image[roi_top_left[1]:roi_bottom_right[1] + 1, roi_top_left[0]:roi_bottom_right[0] + 1]
 
 
 class PersonTimeFrame:
