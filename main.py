@@ -74,9 +74,9 @@ def main() -> ExitCode:
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
     image_provider = ImageProviderFromVideo(
-         ['testing_data/m_front_single.MOV', 'testing_data/f_side_single.MOV'],
-         start=39*30,  # start after first few seconds
-         skipping=60)  # type: ImageProvider # provide each 15th frame (30 fps)
+         ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
+         start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
+         skipping=30)  # type: ImageProvider # (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
