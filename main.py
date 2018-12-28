@@ -8,10 +8,13 @@ BUT - Brno University of Technology
 """
 import logging
 import sys
+import threading
 import warnings
 from enum import unique, Enum
 
 import coloredlogs as coloredlogs
+import cv2
+import matplotlib.pyplot as plt
 
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
@@ -81,30 +84,43 @@ def main() -> ExitCode:
     visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
-    for i, image_set in enumerate(image_provider):
-        logger.info('step {}'.format(i))
-        front_image, side_image = image_set
+    def processing_pipeline():
+        for i, image_set in enumerate(image_provider):
+            logger.info('step {}'.format(i))
+            front_image, side_image = image_set
 
-        logger.info('detecting people')
-        front_views = detector.detect(front_image, camera_front)
-        side_views = detector.detect(side_image, camera_side)
+            logger.info('detecting people')
+            front_views = detector.detect(front_image, camera_front)
+            side_views = detector.detect(side_image, camera_side)
 
-        logger.info('matching people')
-        matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
-        time_frames = matcher.match(front_views, side_views)
+            logger.info('matching people')
+            matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
+            time_frames = matcher.match(front_views, side_views)
 
-        logger.info('locating people')
-        time_frames_located = []
-        for time_frame in time_frames:
-            located_frame = triangulation.locate(time_frame)
-            time_frames_located.append(located_frame)
+            logger.info('locating people')
+            time_frames_located = []
+            for time_frame in time_frames:
+                located_frame = triangulation.locate(time_frame)
+                time_frames_located.append(located_frame)
 
-        logger.info('tracking people')
-        for time_frame in time_frames_located:
-            person = tracker.track(time_frame)
-            logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
+            logger.info('tracking people')
+            for time_frame in time_frames_located:
+                person = tracker.track(time_frame)
+                logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
 
+    processing_thread = threading.Thread(target=processing_pipeline)
+    processing_thread.start()
+
+    while True:
         visualizer.render()
+        plt.pause(2)
+        plt.show()
+        if cv2.waitKey(2) & 0xFF == ord('q'):
+            logger.debug('break')
+            break
+
+    # TODO: Better thread handling. Better application shutdown.
+    processing_thread.join(timeout=10)
 
     return ExitCode.EX_OK
 
