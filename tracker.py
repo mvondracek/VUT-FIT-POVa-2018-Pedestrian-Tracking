@@ -106,7 +106,9 @@ class HistogramTracker(PersonTracker):
             best_hellinger_match = min(x for x in hellinger_histcmps if x is not None)
             i_hellinger_match = hellinger_histcmps.index(best_hellinger_match)
 
-            if i_intersect_match == i_hellinger_match:  # TODO threshold
+            logger.debug("best_intersect_match={}".format(best_intersect_match))
+            logger.debug("best_hellinger_match={}".format(best_hellinger_match))
+            if i_intersect_match == i_hellinger_match and best_hellinger_match < 0.3:  # TODO threshold
                 person = self._people[i_intersect_match]
                 person.time_frames.append(frame)
                 # Do not append person to `self._people` here. It is already tracked.
