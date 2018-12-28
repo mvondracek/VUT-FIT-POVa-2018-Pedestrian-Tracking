@@ -186,3 +186,48 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
         self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
         self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
+
+    def test_locate_single_30(self):
+        max_delta = 35
+        front_view = self.create_person_view(self.camera_m, 'testing_data/s3_single_30_front.png')
+        side_view = self.create_person_view(self.camera_f, 'testing_data/s3_single_30_side.png')
+
+        person_time_frame = PersonTimeFrame([front_view, side_view])
+        person_time_frame.real_subject_coordinates_3d = (160, 600, 147)
+
+        located = self.triangulation.locate(person_time_frame)
+        # plot_person_time_frame(located)  # for debugging
+        print(located.coordinates_3d)
+        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
+
+    def test_locate_single_49(self):
+        max_delta = 35
+        front_view = self.create_person_view(self.camera_m, 'testing_data/s3_single_49_front.png')
+        side_view = self.create_person_view(self.camera_f, 'testing_data/s3_single_49_side.png')
+
+        person_time_frame = PersonTimeFrame([front_view, side_view])
+        person_time_frame.real_subject_coordinates_3d = (50, 500, 147)
+
+        located = self.triangulation.locate(person_time_frame)
+        # plot_person_time_frame(located)  # for debugging
+        print(located.coordinates_3d)
+        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
+
+    def test_locate_single_51(self):
+        max_delta = 35
+        front_view = self.create_person_view(self.camera_m, 'testing_data/s3_single_51_front.png')
+        side_view = self.create_person_view(self.camera_f, 'testing_data/s3_single_51_side.png')
+
+        person_time_frame = PersonTimeFrame([front_view, side_view])
+        person_time_frame.real_subject_coordinates_3d = (50, 300, 147)
+
+        located = self.triangulation.locate(person_time_frame)
+        # plot_person_time_frame(located)  # for debugging
+        print(located.coordinates_3d)
+        self.assertAlmostEqual(located.coordinates_3d[0], located.real_subject_coordinates_3d[0], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[1], located.real_subject_coordinates_3d[1], delta=max_delta)
+        self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
