@@ -47,20 +47,23 @@ class Plotter3D(Visualizer):
         from mpl_toolkits.mplot3d import Axes3D  # required for `ax = fig.add_subplot(111, projection='3d')`
         fig = plt.figure()
         self.ax = fig.add_subplot(111, projection='3d')  # requires `from mpl_toolkits.mplot3d import Axes3D`
-        self.ax.set_xlabel('x [cm]')
-        self.ax.set_ylabel('y [cm]')
-        self.ax.set_zlabel('z [cm]')
-
         self._render_cameras()
+        self._render_axis_labels()
         self.ax.legend()
 
         plt.ion()
         plt.show()
 
+    def _render_axis_labels(self):
+        self.ax.set_xlabel('x [cm]')
+        self.ax.set_ylabel('y [cm]')
+        self.ax.set_zlabel('z [cm]')
+
     def render(self):
         plt.cla()
         self._render_cameras()
         self._render_people_paths()
+        self._render_axis_labels()
         self.ax.legend()
         plt.draw()
         plt.pause(0.001)  # NOTE: https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
