@@ -150,20 +150,20 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png', 300, 20)
         assert_distance(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png', 600, 20)
 
-    def test_locate(self):
-        def create_person_view(camera, image_path):
-            image_front = cv2.imread(image_path)
-            self.person_detector.set_image_for_detection(image_front)
-            people = self.person_detector.run_multi_person_detection()
-            self.assertEqual(len(people), 1, "Detected incorrect number of people.")
-            person = people[0]
-            return PersonView(image_front, image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
+    def create_person_view(self, camera, image_path):
+        image_front = cv2.imread(image_path)
+        self.person_detector.set_image_for_detection(image_front)
+        people = self.person_detector.run_multi_person_detection()
+        self.assertEqual(len(people), 1, "Detected incorrect number of people.")
+        person = people[0]
+        return PersonView(image_front, image_front, camera, (person[1][1], person[1][0]), (person[2][1], person[2][0]))
 
+    def test_locate(self):
         max_delta = 35
 
         # distance 300
-        front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png')
-        side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x0y300.png')
+        front_view = self.create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x0y300.png')
+        side_view = self.create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x0y300.png')
 
         person_time_frame = PersonTimeFrame([front_view, side_view])
         person_time_frame.real_subject_coordinates_3d = (0, 300, 147)
@@ -175,8 +175,8 @@ class TestCameraDistanceTriangulationSceneCorridor(TestCase):
         self.assertAlmostEqual(located.coordinates_3d[2], located.real_subject_coordinates_3d[2], delta=max_delta)
 
         # distance 600
-        front_view = create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png')
-        side_view = create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x50y600.png')
+        front_view = self.create_person_view(self.camera_m, 'testing_data/s3_m_front_single_x50y600.png')
+        side_view = self.create_person_view(self.camera_f, 'testing_data/s3_f_side_single_x50y600.png')
 
         person_time_frame = PersonTimeFrame([front_view, side_view])
         person_time_frame.real_subject_coordinates_3d = (0, 600, 147)
