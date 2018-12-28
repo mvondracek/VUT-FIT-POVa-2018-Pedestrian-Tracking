@@ -49,7 +49,7 @@ class OpenPoseDetector(PeopleDetector):
         return detected
 
 
-class OpenPoseDetectorUsingPrecompiledBinary:
+class OpenPoseDetectorUsingPrecompiledBinary(PeopleDetector):
     """TODO"""
     def __init__(self, binary_path, use_gpu=True, net_resolution='480x240'):
         if 'Windows' not in platform.system():
