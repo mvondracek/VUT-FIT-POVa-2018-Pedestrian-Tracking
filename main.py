@@ -97,9 +97,15 @@ def main() -> ExitCode:
         matcher.set_original_images(front_image, side_image)  # FIXME: not needed when "whole person box extraction" is implemented in detector
         time_frames = matcher.match(front_views, side_views)
 
-        logger.info('locating and tracking people')
+        logger.info('locating people')
+        time_frames_located = []
         for time_frame in time_frames:
-            person = tracker.track(triangulation.locate(time_frame))
+            located_frame = triangulation.locate(time_frame)
+            time_frames_located.append(located_frame)
+
+        logger.info('tracking people')
+        for time_frame in time_frames_located:
+            person = tracker.track(time_frame)
             logger.info("Time={}, Person={}, 3D={}"
                         .format(person.time_frames[-1].time, person.name, person.time_frames[-1].coordinates_3d))
 
