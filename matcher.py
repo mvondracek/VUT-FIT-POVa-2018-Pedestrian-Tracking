@@ -56,6 +56,7 @@ class HistogramMatcher(PersonMatcher):
 
     # TODO optimalization: differ clear image and image with people -> whole person box -> could be better for histograms
     def match(self, front_views: List[PersonView], side_views: List[PersonView]) -> List[PersonTimeFrame]:
+        logger.debug('matching {} front_views with {} side_views'.format(len(front_views), len(side_views)))
         front_histograms = []
         side_histograms = []
         for view in front_views:
@@ -103,6 +104,7 @@ class HistogramMatcher(PersonMatcher):
                 side_histograms[i_intersect_match] = None  # already matched a front_view, don't compare it any further
                 # TODO if one person is left in both screens, it is matched even if totally different - threshold could fix it, but threshold is impossible now
 
+        logger.debug('matched {} time frames'.format(len(results)))
         return results
 
 
