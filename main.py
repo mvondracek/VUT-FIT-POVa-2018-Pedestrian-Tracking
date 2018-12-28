@@ -102,8 +102,7 @@ def main() -> ExitCode:
         logger.info('tracking people')
         for time_frame in time_frames_located:
             person = tracker.track(time_frame)
-            logger.info("Time={}, Person={}, 3D={}"
-                        .format(person.time_frames[-1].time, person.name, person.time_frames[-1].coordinates_3d))
+            logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
 
         visualizer.render()
 

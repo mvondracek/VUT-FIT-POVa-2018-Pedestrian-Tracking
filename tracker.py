@@ -49,8 +49,7 @@ class NullTracker(PersonTracker):
 
     def track(self, frame: PersonTimeFrame) -> Person:
         person = Person(frame)
-        logger.debug("New person! Time={}, Person={}, 3D={}"
-                     .format(person.time_frames[-1].time, person.name, person.time_frames[-1].coordinates_3d))
+        logger.debug("New person! Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
         self._people.append(person)
         logger.debug('Tracked people total: {}'.format(len(self._people)))
         return person
