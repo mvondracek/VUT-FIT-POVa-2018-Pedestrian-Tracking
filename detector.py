@@ -40,7 +40,7 @@ class OpenPoseDetector(PeopleDetector):
     def detect(self, image, camera: Camera) -> List[PersonView]:
         self.pova_pose.set_image_for_detection(image)
         people = self.pova_pose.run_multi_person_detection()
-        logger.info("Detected people = {0}".format(len(people)))
+        logger.debug("Camera {}, detected people = {}".format(camera.name, len(people)))
         detected = []
         for person in people:
             detected.append(PersonView(person[0], camera, (person[1][0], person[1][1]), (person[2][0], person[2][1])))
