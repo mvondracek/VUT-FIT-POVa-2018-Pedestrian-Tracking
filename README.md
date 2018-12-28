@@ -14,3 +14,22 @@
 > **How to submit the projects:** One \*.zip file including all source codes, project report, and **presentation slides**. If the file size limit is a problem, contact us. Please include examples of data and instructions how to use your code and tools. 
 >
 > **Project presentations** are scheduled for Thursday 2018-01-04 14:00 in M103.
+
+## Installation
+
+1) **Python 3.7** is required.
+2) Please create a virtual environment for this project.
+3) With activated virtual environment, run: `pip install -r requirements.txt` in the project folder.
+4) Download *OpenPose* model from `http://posefs1.perception.cs.cmu.edu/OpenPose/models/pose/coco/pose_iter_440000.caffemodel`
+   and save it to `openpose/pose/coco`.
+
+## Run
+
+~~~
+./main.py
+~~~
+
+## Documentation
+
+* `./report.pdf`
+* `./slides.pdf`
