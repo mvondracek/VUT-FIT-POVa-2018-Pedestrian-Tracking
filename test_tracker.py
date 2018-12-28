@@ -84,3 +84,16 @@ class TestHistogramTracker(TestCase):
         person3 = tracker.track(time_frame)  # track second frame
         self.assertEqual(person, person3)
         self.assertEqual(1, len(tracker.people))
+
+        # frame with different person
+        image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_single_F_y600.png',
+                                            side_image_path='testing_data/s3_f_side_single_F_y600.png',
+                                            )  # type: ImageProvider
+        front, side = next(image_provider)
+        time_frames_located = self.prepare_frames(front, side)
+        self.assertEqual(1, len(time_frames_located), 'prepare_frames failed to prepare correct number of frames')
+        time_frame = time_frames_located[0]
+
+        person4 = tracker.track(time_frame)  # track different person
+        self.assertNotEqual(person, person4)
+        self.assertEqual(2, len(tracker.people))
