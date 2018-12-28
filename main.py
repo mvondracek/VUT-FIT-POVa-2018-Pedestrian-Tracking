@@ -51,6 +51,7 @@ def main() -> ExitCode:
     logging.captureWarnings(True)
     warnings.simplefilter('always', ResourceWarning)
     coloredlogs.install(level=logging.DEBUG)
+    logging.getLogger('matplotlib').setLevel(logging.INFO)
     logger.debug('main started')
 
     # region Initialization
