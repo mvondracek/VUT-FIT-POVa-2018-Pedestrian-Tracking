@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from detector import OpenPoseDetector, PeopleDetector
-from image_provider import ImageProvider, ImageProviderFromVideo
+from image_provider import ImageProvider, ImageProviderFromVideo, DummyImageProvider
 from matcher import PersonMatcher, HistogramMatcher
 from tracker import NullTracker, PersonTracker, HistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
@@ -79,6 +79,10 @@ def main() -> ExitCode:
          #['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
          #start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
          skipping=30)  # type: ImageProvider # (30 fps)
+    # image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_single_x0y300.png',
+    #                                     side_image_path='testing_data/s3_f_side_single_x0y300.png',
+    #                                     iterations=3
+    #                                     )  # type: ImageProvider
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
