@@ -98,6 +98,9 @@ class HistogramMatcher(PersonMatcher):
                     intersect_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_INTERSECT))
                     hellinger_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_HELLINGER))
 
+            if all(x is None for x in intersect_histcmps):
+                return results  # no side histograms to match
+
             best_intersect_match = max(x for x in intersect_histcmps if x is not None)  # INTERSECT method: HIGHER value ~ HIGHER similarity
             i_intersect_match = intersect_histcmps.index(best_intersect_match)
             best_hellinger_match = min(x for x in hellinger_histcmps if x is not None)  # HELLINGER method: LOWER value ~ HIGHER similarity
