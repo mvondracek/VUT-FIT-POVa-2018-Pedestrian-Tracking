@@ -65,8 +65,8 @@ def main() -> ExitCode:
     camera_side = Camera(
         name='side camera (f)',
         focal_length=FOCAL_LENGTH_CAMERA_F,
-        position=(200, 0, z_level),
-        orientation=(-1, 1, 0)
+        position=(-200, 0, z_level),
+        orientation=(1, 1, 0)
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
