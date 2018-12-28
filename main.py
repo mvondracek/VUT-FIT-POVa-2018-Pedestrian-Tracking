@@ -21,7 +21,7 @@ from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_
 from detector import OpenPoseDetector, PeopleDetector
 from image_provider import ImageProvider, ImageProviderFromVideo
 from matcher import PersonMatcher, HistogramMatcher
-from tracker import NullTracker, PersonTracker
+from tracker import NullTracker, PersonTracker, HistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
 from visualizer import Plotter3D, Visualizer
 
@@ -74,13 +74,13 @@ def main() -> ExitCode:
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
     image_provider = ImageProviderFromVideo(
-        ['testing_data/s3_m_front_multi.mp4', 'testing_data/s3_f_side_multi.mp4'],
-        start=25*30,  # start after first 25 seconds
-        skipping=30)  # type: ImageProvider # provide each 30th frame (30 fps)
+         ['testing_data/m_front_single.MOV', 'testing_data/f_side_single.MOV'],
+         start=39*30,  # start after first few seconds
+         skipping=60)  # type: ImageProvider # provide each 15th frame (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
-    tracker = NullTracker()  # type: PersonTracker
+    tracker = HistogramTracker()  # type: PersonTracker
     visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
