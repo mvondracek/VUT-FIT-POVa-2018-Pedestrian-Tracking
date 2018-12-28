@@ -70,9 +70,8 @@ def main() -> ExitCode:
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
-    provider = ImageProviderFromVideo(
-        front_video_path='testing_data/s3_m_front_multi.mp4',
-        side_video_path='testing_data/s3_f_side_multi.mp4',
+    image_provider = ImageProviderFromVideo(
+        ['testing_data/s3_m_front_multi.mp4', 'testing_data/s3_f_side_multi.mp4'],
         start=25*30,  # start after first 25 seconds
         skipping=30)  # type: ImageProvider # provide each 30th frame (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
@@ -82,12 +81,9 @@ def main() -> ExitCode:
     visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
-    while True:
-        logger.info('reading images')
-        front_image, side_image = provider.get_next_images()
-        if front_image is None or side_image is None:
-            logger.info('No more images.')
-            break
+    for i, image_set in enumerate(image_provider):
+        logger.info('step {}'.format(i))
+        front_image, side_image = image_set
 
         logger.info('detecting people')
         front_views = detector.detect(front_image, camera_front)

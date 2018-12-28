@@ -15,59 +15,90 @@ logger = logging.getLogger(__name__)
 
 
 class ImageProvider(ABC):
-    """
-    ImageProvider should provide pairs of front & side images. Image pairs should be provided in a chronological order.
-    """
+    """Iterator provides tuples of images, 1 from each camera. Tuples should be provided in a chronological order. """
     @abstractmethod
-    def get_next_images(self) -> Tuple:
-        """Load next available image pair (front image & side image)."""
+    def __iter__(self):
+        """ Return the iterator object - most probably self. """
+        pass
+
+    @abstractmethod
+    def __next__(self) -> Tuple:
+        """ Load next step images. Must raise StopIteration if no more items. """
         pass
 
 
 class DummyImageProvider(ImageProvider):
-    """Dummy provider provides the same predefined pair of images infinitely."""
+    """Dummy provider provides a predefined pair of images ONLY ONCE."""
     def __init__(self, front_image_path, side_image_path):
         logger.debug('Using DummyImageProvider as ImageProvider.')
         self.front_image = cv2.imread(front_image_path)
         self.side_image = cv2.imread(side_image_path)
+        self.finished = False
 
-    def get_next_images(self) -> Tuple:
-        return self.front_image, self.side_image
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple:
+        if self.finished:
+            raise StopIteration
+        else:
+            self.finished = True
+            return self.front_image, self.side_image
 
 
 class ImageProviderFromVideo(ImageProvider):
-    def __init__(self, front_video_path, side_video_path, start: int = 0, skipping: int = 0):
-        """
+    """ Load images from given video(s). """
+    def __init__(self, paths_to_videos, start: int = 0, skipping: int = 0):
+        """"
         :param start: Start providing images from frame with this ordinary number. Skip first `start` frames.
         :param skipping: Skip specified number of frames each time before providing next image.
         """
         logger.debug('Using ImageProviderFromVideo as ImageProvider.')
-        self.front_video = cv2.VideoCapture(front_video_path)
-        self.side_video = cv2.VideoCapture(side_video_path)
+        self.finished = False
+        self.videos = []
+        for path in paths_to_videos:
+            video = cv2.VideoCapture(path)
+            self.videos.append(video)
+            if not video.isOpened():
+                raise IOError("Image provider failed to open a video. Path: {}".format(path))
+
         self.skipping = skipping
+
         for i in range(start):
-            # TODO: mvondracek: is there a better way how to skip several frames?
-            _, front = self.front_video.read()
-            _, side = self.side_video.read()
-            if __debug__:
-                cv2.imshow('ImageProviderFromVideo {} front'.format(id(self)), front)
-                cv2.imshow('ImageProviderFromVideo {} side'.format(id(self)), side)
-                cv2.waitKey(1)
+            for video in self.videos:
+                # TODO: mvondracek: is there a better way how to skip several frames?
+                _, frame = video.read()
+                if __debug__:
+                    cv2.imshow('ImageProviderFromVideo={} video={}'.format(id(self), id(video)), frame)
+                    cv2.waitKey(1)
 
-    def get_next_images(self) -> Tuple:
-        ret1, front = None, None
-        ret2, side = None, None
-        for i in range(self.skipping):
-            # TODO: mvondracek: is there a better way how to skip several frames?
-            ret1, front = self.front_video.read()
-            ret2, side = self.side_video.read()
-            if __debug__:
-                cv2.imshow('ImageProviderFromVideo {} front'.format(id(self)), front)
-                cv2.imshow('ImageProviderFromVideo {} side'.format(id(self)), side)
-                cv2.waitKey(1)
+    def __iter__(self):
+        return self
 
-        if ret1 is None or ret2 is None:
-            logger.info("Video stream ended.")
-            return None, None
-        else:
-            return front, side
+    def __next__(self) -> Tuple:
+        if self.finished:
+            raise StopIteration
+
+        images = []
+        for video in self.videos:
+            ret, frame = None, None
+            for i in range(self.skipping):
+                # TODO: mvondracek: is there a better way how to skip several frames?
+                ret, frame = video.read()
+                if __debug__:
+                    cv2.imshow('ImageProviderFromVideo={} video={}'.format(id(self), id(video)), frame)
+                    cv2.waitKey(1)
+
+            if not ret:
+                logger.debug("Video stream has ended.")
+                self.finished = True
+                self._release_videos()
+                raise StopIteration
+            else:
+                images.append(frame)
+
+        return tuple(images)
+
+    def _release_videos(self):
+        """OpenCV video readers' resources should be released properly."""
+        map(lambda video: video.release(), self.videos)
