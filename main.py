@@ -69,19 +69,16 @@ def main() -> ExitCode:
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
-    provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_multi_y600.png', side_image_path='testing_data/s3_f_side_multi_y600.png')  # type: ImageProvider
+    image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_multi_y600.png', side_image_path='testing_data/s3_f_side_multi_y600.png')  # type: ImageProvider
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = NullTracker()  # type: PersonTracker
     # endregion
 
-    while True:
-        logger.info('reading images')
-        front_image, side_image = provider.get_next_images()
-        if front_image is None or side_image is None:
-            logger.info('No more images.')
-            break
+    for i, image_set in enumerate(image_provider):
+        logger.info('step {}'.format(i))
+        front_image, side_image = image_set
 
         logger.info('detecting people')
         front_views = detector.detect(front_image, camera_front)

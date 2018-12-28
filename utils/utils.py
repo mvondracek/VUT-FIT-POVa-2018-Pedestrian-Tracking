@@ -225,8 +225,10 @@ def get_frame_from_video(video_path, frame_time=0.0):
             break
 
         if current_time_ms-time_tolerance_ms <= frame_time_ms <= current_time_ms+time_tolerance_ms:
+            cap.release()
             return frame
 
+    cap.release()
     if not found:
         raise Exception("Did not find frame with time {} [s] in given video. Video searched for: {} [s]".format(frame_time, current_time_ms/1000))
 
