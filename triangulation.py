@@ -12,12 +12,15 @@ Notes:
     https://github.com/mbarde/twocams/blob/master/README.md
     http://www.vision.caltech.edu/bouguetj/calib_doc/htmls/parameters.html
 """
+import logging
 import math
 from abc import ABC, abstractmethod
 
 import numpy as np
 
 from person import PersonTimeFrame, PersonView
+
+logger = logging.getLogger(__name__)
 
 
 class Triangulation(ABC):
@@ -94,4 +97,5 @@ class CameraDistanceTriangulation(Triangulation):
         current_size = math.hypot(person_view.pose_top_coordinate[0] - person_view.pose_bottom_coordinate[0],
                                   person_view.pose_top_coordinate[1] - person_view.pose_bottom_coordinate[1],
                                   )
+        logger.debug('current pose top to bottom size: {}'.format(current_size))
         return int((self.real_size * person_view.camera.focal_length) / current_size)
