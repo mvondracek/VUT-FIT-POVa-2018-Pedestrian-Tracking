@@ -21,6 +21,7 @@ from image_provider import ImageProvider, DummyImageProvider, ImageProviderFromV
 from matcher import PersonMatcher, HistogramMatcher
 from tracker import NullTracker, PersonTracker, PositionAndHistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
+from visualizer import Plotter3D, Visualizer
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +70,16 @@ def main() -> ExitCode:
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
-    provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_multi_y600.png', side_image_path='testing_data/s3_f_side_multi_y600.png')  # type: ImageProvider
+    provider = ImageProviderFromVideo(
+        front_video_path='testing_data/s3_m_front_multi.mp4',
+        side_video_path='testing_data/s3_f_side_multi.mp4',
+        start=25*30,  # start after first 25 seconds
+        skipping=30)  # type: ImageProvider # provide each 30th frame (30 fps)
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = NullTracker()  # type: PersonTracker
+    visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
     while True:
@@ -96,6 +102,8 @@ def main() -> ExitCode:
             person = tracker.track(triangulation.locate(time_frame))
             logger.info("Time={}, Person={}, 3D={}"
                         .format(person.time_frames[-1].time, person.name, person.time_frames[-1].coordinates_3d))
+
+        visualizer.render()
 
     return ExitCode.EX_OK
 
