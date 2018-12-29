@@ -182,6 +182,9 @@ class PovaPose:
         return frame_clone[left_top_point[1]:right_bottom_point[1]+1, left_top_point[0]:right_bottom_point[0]+1]
 
     def getKeypoints(self, probMap):
+        """
+            Implementation based on LearnOpenCV example: https://github.com/spmallick/learnopencv/tree/master/OpenPose-Multi-Person
+        """
         mapSmooth = cv2.GaussianBlur(probMap, (3, 3), 0, 0)
 
         mapMask = np.uint8(mapSmooth > self.threshold)
@@ -202,6 +205,10 @@ class PovaPose:
         return keypoints
 
     def getValidPairs(self, output):
+        """
+            Implementation based on LearnOpenCV example: https://github.com/spmallick/learnopencv/tree/master/OpenPose-Multi-Person
+        """
+
         valid_pairs = []
         invalid_pairs = []
         n_interp_samples = 10
@@ -271,9 +278,11 @@ class PovaPose:
                 valid_pairs.append([])
         return valid_pairs, invalid_pairs
 
-    # This function creates a list of keypoints belonging to each person
-    # For each detected valid pair, it assigns the joint(s) to a person
     def getPersonwiseKeypoints(self, valid_pairs, invalid_pairs):
+        """
+            Implementation based on LearnOpenCV example: https://github.com/spmallick/learnopencv/tree/master/OpenPose-Multi-Person
+        """
+
         # the last number in each row is the overall score
         personwiseKeypoints = -1 * np.ones((0, 19))
 
