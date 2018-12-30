@@ -11,7 +11,7 @@ import platform
 import os
 import subprocess
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Union
 
 import cv2
 
@@ -54,8 +54,27 @@ class OpenPoseDetector(PeopleDetector):
 
 
 class OpenPoseDetectorUsingPrecompiledBinary(PeopleDetector):
-    """TODO"""
-    def __init__(self, binary_path, use_gpu=True, net_resolution='480x240'):
+    """Run OpenPose detection using pre-built binary."""
+    def __init__(self, binary_path, use_gpu, net_resolution='-1x368', force_op_model=None):
+        """
+        1) Go to OpenPose releases: https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
+        2) Download and extract OpenPose folder (referred as OP_HOME).
+        3) Run OP_HOME/models/getModels.bat to download all OP models.
+            [OPTIONAL] edit the getModels.bat to download only needed models.
+        4) [OPTIONAL] Read https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/quick_start.md
+        :param binary_path: path to OpenPose binary
+        :param use_gpu: True to use GPU, False to use CPU. By default, OP model is BODY_25 for GPU, COCO for CPU. Make
+            sure to have the corresponding model downloaded in OP_HOME/models folder, or select other model.
+        :param net_resolution: Multiples of 16, e.g. 320x176. Increase ~ accuracy increase. Decrease ~ speed increase.
+            For best results, keep the closest aspect ratio possible to the images processed. Using -1 in any of the
+            dimensions, OP will choose the optimal aspect ratio depending on the input. E.g. the default -1x368 is
+            equivalent to 656x368 for 16:9 resolutions (full HD 1980x1080, HD 1280x720 etc.).
+        :param force_op_model: Manually select OpenPose model BODY_25/COCO/MPI. By default, the best suitable OP model
+            is chosen for binary type. E.g. COCO is ~3x faster on CPU than BODY_25, but BODY_25 is ~40% faster on GPU.
+            Make sure to have the requested model downloaded in OP_HOME/models folder.
+        """
+        # TODO add info about running CUDA and cuDNN (links)
+        # TODO reflect model selection and cpu/gpu usage
         if 'Windows' not in platform.system():
             raise NotImplementedError("Only Windows binaries supported.")
 
@@ -88,50 +107,87 @@ class OpenPoseDetectorUsingPrecompiledBinary(PeopleDetector):
         # TODO add ' --model_pose {}' ... BODY_25 for GPU or COCO for CPU
 
     def detect(self, image, camera: Camera) -> List[PersonView]:
-        # TODO predelat parametry na dict Cam->Img (poradi?) nebo na list Tuplu (image, camera)???
         img_name = 'image.png'
         result_name = 'image_keypoints.json'
+
+        # prepare the image for detection
         cv2.imwrite(os.path.join(self.images_folder, img_name), image)
 
+        # run detection
         p = subprocess.Popen(self.cmd, cwd=self.binary_home)
         result = p.communicate()  # TODO detekovat errory, nevypisovat na stdout
 
-        people = self._get_people_from_json(os.path.join(self.results_folder, result_name))
+        # parse detection results to person views
+        views = self.load_all_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, camera)
 
-        detected = []
-        for person in people:
-            detected.append(PersonView(image, person[0], camera, (person[1][0], person[1][1]), (person[2][0], person[2][1])))
-        return detected
+        return views
 
-    def _get_people_from_json(self, path):  # TODO rename
-        with open(path) as f:
-            detection_result = json.load(f)
+    def detect_multiple_images(self):
+        raise NotImplementedError  # TODO
 
-        people_parts = []
+    def load_all_valid_persons_from_json(self, json_path, image, camera: Camera) -> List[PersonView]:
+        with open(json_path) as json_file:
+            detection_result = json.load(json_file)
+
+        results = []
         for person in detection_result['people']:
-            people_parts.append(self._get_body_parts_from_keypoints(person['pose_keypoints_2d']))
+            body_parts = self.get_body_parts_from_keypoints(person['pose_keypoints_2d'])
+            person_image = self.get_person_subimage(image, body_parts)
+            neck, hip_center = self.get_neck_and_hips_center_coordinates(body_parts)
+            if not neck or not hip_center:
+                logger.warning("Person does not have nose or hips detected.")
+                continue
+
+            results.append(PersonView(image, person_image, camera, neck, hip_center))
+
+        return results
 
     @staticmethod
-    def _get_body_parts_from_keypoints(keypoints: List[float], part_confidence_threshold=0.7) -> List[Tuple[float, float] or None]:
-        """Body parts are loaded only if detection confidence (0 to 1) is higher than the part confidence threshold."""
+    def get_body_parts_from_keypoints(keypoints: List[float], part_confidence_threshold=0.7) -> List[Optional[Tuple[int, int]]]:
+        """
+        Body parts are loaded only if detection confidence (0 to 1) is higher than the part confidence threshold.
+        :return: body parts coordinates (x, y); order of parts can be found at:
+        https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md#keypoint-ordering
+        """
         body_parts = []
         for i, detection_confidence in enumerate(keypoints[2::3]):
             # keypoint is defined as (part X, part Y, probability)
             if detection_confidence >= part_confidence_threshold:
-                body_parts.append((keypoints[i-2], keypoints[i-1]))
+                body_parts.append((int(keypoints[i-2]), int(keypoints[i-1])))
             else:
                 body_parts.append(None)
 
         return body_parts
 
+    @staticmethod
+    def get_person_subimage(image, body_parts: List[Optional[Tuple[int, int]]]):
+        """Return subimage defined by person's bounding box."""
+        # TODO combine this with background substraction to extract just the person, not background
+        top_left_x = min(part[0] for part in body_parts if part is not None)
+        top_left_y = min(part[1] for part in body_parts if part is not None)
+        bottom_right_x = max(part[0] for part in body_parts if part is not None)
+        bottom_right_y = max(part[1] for part in body_parts if part is not None)
 
-o = OpenPoseDetectorUsingPrecompiledBinary(r'C:\Users\Filip\Downloads\openpose-1.4.0-win64-gpu-binaries\bin\OpenPoseDemo.exe')
-# img = cv2.imread('testing_data/s3_f_side_multi_y600.png')
-img = cv2.imread('testing_data/s3_m_front_.png')
-o.detect(img, Camera('asd', 1.0, (1, 0, 2), (5, 3, 0)))
+        # last item in indexed range is excluded in python, but we want the bottom_right point included -> need +1
+        return image[top_left_y:bottom_right_y+1, top_left_x:bottom_right_x+1]
 
+    @staticmethod
+    def get_neck_and_hips_center_coordinates(body_parts: List[Optional[Tuple[int, int]]]):
+        """
+        Get coordinates of neck and center of hips. If only one hip detected, return that hip (instead of the center).
+        Keypoints (body parts) order can be found at:
+        https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/output.md#keypoint-ordering
+        """
+        neck = body_parts[1]
+        hip = None
+        hip_r = body_parts[9]
+        hip_l = body_parts[12]
 
-"""Error:
-Prototxt file not found: models\pose/body_25/pose_deploy.prototxt.
-	3. Using paths with spaces.
-"""
+        if hip_r and hip_l:
+            hip = (int((hip_r[0] + hip_l[0]) / 2), int((hip_r[1] + hip_l[1]) / 2))
+        elif hip_r:
+            hip = hip_r
+        elif hip_l:
+            hip = hip_l
+
+        return neck, hip
