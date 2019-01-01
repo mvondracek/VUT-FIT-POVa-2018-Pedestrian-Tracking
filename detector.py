@@ -9,9 +9,10 @@ import json
 import logging
 import platform
 import os
+import shutil
 import subprocess
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional
 
 import cv2
 
@@ -73,18 +74,18 @@ class OpenPoseBinaryDetector(PeopleDetector):
             [OPTIONAL] edit the getModels.bat to download only needed models.
         4) [OPTIONAL] Read https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/quick_start.md
         :param binary_path: path to OpenPose binary
-        :param using_gpu: True to use GPU, False to use CPU. By default, OP model is BODY_25 for GPU, COCO for CPU. Make
-            sure to have the corresponding model downloaded in OP_HOME/models folder, or select other model.
+        :param using_gpu: True to use GPU, False to use CPU. To use GTX GPU, it should support OpenCL 1.2. Install CUDA
+            drivers from: https://developer.nvidia.com/cuda-downloads
+            Then follow cuDNN installation guide: https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html
         :param net_resolution: Multiples of 16, e.g. 320x176. Increase ~ accuracy increase. Decrease ~ speed increase.
             For best results, keep the closest aspect ratio possible to the images processed. Using -1 in any of the
             dimensions, OP will choose the optimal aspect ratio depending on the input. E.g. the default -1x368 is
             equivalent to 656x368 for 16:9 resolutions (full HD 1980x1080, HD 1280x720 etc.). NOTE: Higher resolution
-            means higher memory consumption (RAM or GPU memory).
-        :param force_op_model: Manually select OpenPose model BODY_25/COCO. By default, the best suitable OP model
-            is chosen for binary type. E.g. COCO is ~3x faster on CPU than BODY_25, but BODY_25 is ~40% faster on GPU.
+            means higher memory consumption (RAM or GPU memory). E.g. -1x336 (for full HD) takes 2 GB of GTX 760 memory.
+        :param force_op_model: Manually select OpenPose model BODY_25/COCO. By default, OP model is BODY_25 for GPU,
+        COCO for CPU. Because COCO is ~3x faster on CPU than BODY_25, but BODY_25 is ~40% faster on GPU.
             Make sure to have the requested model downloaded in OP_HOME/models folder.
         """
-        # TODO add info about running CUDA and cuDNN (links)
         if 'Windows' not in platform.system():
             raise NotImplementedError("Only Windows binaries supported.")
 
@@ -96,16 +97,17 @@ class OpenPoseBinaryDetector(PeopleDetector):
                          .format(force_op_model, type(self).__name__,  self.models.enum_values()))
             raise NotImplementedError("Using unknown OpenPose model!")
 
-        # prepare tmp directory for input images and results
+        # prepare tmp directory for input images and results; tmp dir is deleted in obj destructor
+        tmp_dir_name = 'POVa_pedestrian_tracking_TEMP_DIR'
         try:
-            tmp_dir = os.path.join(os.environ['TEMP'], 'POVa_pedestrian_tracking')
+            self.tmp_dir = os.path.join(os.environ['TEMP'], tmp_dir_name)
         except KeyError:
             logger.warning("Environment variable TEMP not found. Creating tmp folder in CWD.")
-            tmp_dir = os.path.join(os.getcwd(), 'POVa_pedestrian_tracking')
+            self.tmp_dir = os.path.join(os.getcwd(), tmp_dir_name)
 
-        logger.debug('Detector created tmp dir at: {}'.format(tmp_dir))
-        self.images_folder = os.path.join(tmp_dir, 'images')
-        self.results_folder = os.path.join(tmp_dir, 'results')
+        logger.debug('Detector created tmp dir at: {}'.format(self.tmp_dir))
+        self.images_folder = os.path.join(self.tmp_dir, 'images')
+        self.results_folder = os.path.join(self.tmp_dir, 'results')
         os.makedirs(self.images_folder, exist_ok=True)
         os.makedirs(self.results_folder, exist_ok=True)
 
@@ -130,10 +132,16 @@ class OpenPoseBinaryDetector(PeopleDetector):
         self.cmd += ' --model_pose {}'.format(self.model)
 
     def detect(self, image, camera: Camera) -> List[PersonView]:
+        """
+        Detect people in one image. For multiple images use method <detect_multiple_images>. It is much faster, because
+        OP initialization for every single image takes time. OP initialization ~ 1-2 sec, but detection of 1 image
+        on GPU ~ 0.1-0.5 sec. E.g. detect 10 images takes 10*2+10*0.5 = 25 sec. However, detect 10 images using
+        the <detect_multiple_images> method takes 1*2+10*0.5 = 7 sec.
+        """
+        # prepare the image for detection
         img_name = 'image.png'
         result_name = 'image_keypoints.json'
-
-        # prepare the image for detection
+        # OpenPose binary reads images from a given directory, so we need to write images to the directory first
         cv2.imwrite(os.path.join(self.images_folder, img_name), image)
 
         # run detection
@@ -141,19 +149,47 @@ class OpenPoseBinaryDetector(PeopleDetector):
         cmd_result = p.communicate()
         if p.returncode != 0:
             logger.error("OpenPose binary run failed!\nSTDOUT: {}\nSTDERR: {}".format(cmd_result[0], cmd_result[1]))
+            raise RuntimeError("OpenPose binary run failed!")
         else:
             logger.debug("OpenPose binary run success. STDOUT: {}".format(cmd_result[0]))
 
         # parse detection results to person views
-        views = self.load_all_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, camera)
+        views = self.load_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, camera)
 
         return views
 
-    def detect_multiple_images(self):
-        # TODO detect multiple images at once is much faster (no repeated net initialization), but memory-hungry
-        raise NotImplementedError
+    def detect_multiple_images(self, images, cameras: List[Camera]) -> List[List[PersonView]]:
+        """
+        Detection of multiple images at once is MUCH FASTER, because OP is initialized just once for multiple
+        images. Initialization ~ 1-2 sec; detection of 1 image on GPU ~ 0.1-0.5 sec. NOTE: Memory consumption is
+        determined by the net_resolution, not by the number of images to detect (images are processed one-by-one).
+        """
+        results = []
 
-    def load_all_valid_persons_from_json(self, json_path, image, camera: Camera) -> List[PersonView]:
+        # prepare images for detection
+        for i, image in enumerate(images):
+            img_name = 'image{}.png'.format(i)
+            # OpenPose binary reads images from a given directory, so we need to write images to the directory first
+            cv2.imwrite(os.path.join(self.images_folder, img_name), image)
+
+        # run detection
+        p = subprocess.Popen(self.cmd, cwd=self.binary_home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd_result = p.communicate()
+        if p.returncode != 0:
+            logger.error("OpenPose binary run failed!\nSTDOUT: {}\nSTDERR: {}".format(cmd_result[0], cmd_result[1]))
+            raise RuntimeError("OpenPose binary run failed!")
+        else:
+            logger.debug("OpenPose binary run success. STDOUT: {}".format(cmd_result[0]))
+
+        # parse detection results to person views
+        for i, image in enumerate(images):
+            result_name = 'image{}_keypoints.json'.format(i)
+            views = self.load_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, cameras[i])
+            results.append(views)
+
+        return results
+
+    def load_valid_persons_from_json(self, json_path, image, camera: Camera) -> List[PersonView]:
         with open(json_path) as json_file:
             detection_result = json.load(json_file)
 
@@ -236,3 +272,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
             return hip_l
         else:
             return None
+
+    def __del__(self):
+        """Delete detector's temporary folder, so images and results are not kept for another run."""
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)  # ignore e.g. folder doesn't exist (if deleted manually)
