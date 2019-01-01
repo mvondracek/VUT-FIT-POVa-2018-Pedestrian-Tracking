@@ -66,7 +66,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
 
     models = Models()  # enum for OP models
 
-    def __init__(self, binary_path, using_gpu, net_resolution='-1x320', force_op_model=None):
+    def __init__(self, binary_path, using_gpu, net_resolution='-1x240', force_op_model=None):
         """
         1) Go to OpenPose releases: https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
         2) Download and extract OpenPose folder (referred as OP_HOME).
@@ -140,9 +140,10 @@ class OpenPoseBinaryDetector(PeopleDetector):
         """
         # prepare the image for detection
         img_name = 'image.png'
+        img_path = os.path.join(self.images_folder, img_name)
         result_name = 'image_keypoints.json'
         # OpenPose binary reads images from a given directory, so we need to write images to the directory first
-        cv2.imwrite(os.path.join(self.images_folder, img_name), image)
+        cv2.imwrite(img_path, image)
 
         # run detection
         p = subprocess.Popen(self.cmd, cwd=self.binary_home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -155,6 +156,9 @@ class OpenPoseBinaryDetector(PeopleDetector):
 
         # parse detection results to person views
         views = self.load_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, camera)
+
+        # delete the tmp image
+        os.remove(img_path)
 
         return views
 
@@ -186,6 +190,8 @@ class OpenPoseBinaryDetector(PeopleDetector):
             result_name = 'image{}_keypoints.json'.format(i)
             views = self.load_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, cameras[i])
             results.append(views)
+
+        # TODO delete tmp images
 
         return results
 
@@ -257,7 +263,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
         else:
             raise NotImplementedError("Unknown OpenPose model!")
 
-        return neck, self._get_optimal_hip_coordinate(hip, hip_r, hip_l)
+        return neck, self._get_optimal_hip_coordinate(hip, hip_l, hip_r)
 
     @staticmethod
     def _get_optimal_hip_coordinate(hip, hip_l, hip_r) -> Optional[Tuple[int, int]]:
