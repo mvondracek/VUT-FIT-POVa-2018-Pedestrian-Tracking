@@ -134,7 +134,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
     def detect(self, image, camera: Camera) -> List[PersonView]:
         """
         Detect people in one image. For multiple images use method <detect_multiple_images>. It is much faster, because
-        OP initialization for every single image takes time. OP initialization ~ 1-2 sec, but detection of 1 image
+        OP initialization for every single image takes time. OP initialization ~ 2 sec, but detection of 1 image
         on GPU ~ 0.1-0.5 sec. E.g. detect 10 images takes 10*2+10*0.5 = 25 sec. However, detect 10 images using
         the <detect_multiple_images> method takes 1*2+10*0.5 = 7 sec.
         """
@@ -142,6 +142,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
         img_name = 'image.png'
         img_path = os.path.join(self.images_folder, img_name)
         result_name = 'image_keypoints.json'
+        result_path = os.path.join(self.results_folder, result_name)
         # OpenPose binary reads images from a given directory, so we need to write images to the directory first
         cv2.imwrite(img_path, image)
 
@@ -155,10 +156,11 @@ class OpenPoseBinaryDetector(PeopleDetector):
             logger.debug("OpenPose binary run success. STDOUT: {}".format(cmd_result[0]))
 
         # parse detection results to person views
-        views = self.load_valid_persons_from_json(os.path.join(self.results_folder, result_name), image, camera)
+        views = self.load_valid_persons_from_json(result_path, image, camera)
 
         # delete the tmp image
         os.remove(img_path)
+        os.remove(result_path)
 
         return views
 
@@ -258,8 +260,8 @@ class OpenPoseBinaryDetector(PeopleDetector):
         elif self.model == self.models.coco:
             neck = body_parts[1]
             hip = None
-            hip_r = body_parts[9]
-            hip_l = body_parts[12]
+            hip_r = body_parts[8]
+            hip_l = body_parts[11]
         else:
             raise NotImplementedError("Unknown OpenPose model!")
 
