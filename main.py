@@ -23,6 +23,7 @@ from image_provider import ImageProvider, ImageProviderFromVideo, DummyImageProv
 from matcher import PersonMatcher, HistogramMatcher
 from tracker import PersonTracker, HistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
+from utils import utils
 from visualizer import Plotter3D, Visualizer
 
 logger = logging.getLogger(__name__)
@@ -90,10 +91,34 @@ def main() -> ExitCode:
     visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
+    first_img_front = None
+    first_img_side = None
+    mask1 = None
+    mask2 = None
+    video_paths = ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov']
+    video1 = cv2.VideoCapture(video_paths[0])
+    video2 = cv2.VideoCapture(video_paths[1])
+    _, first_img_front = video1.read()
+    _, first_img_side = video2.read()
+    video1.release()
+    video2.release()
+
+    logger.info('Select mask to sync images to the first image. Should be area that wont'
+                'get covered by anything else and is stable. Should cover the same are in image1 and image2.')
+    cv2.namedWindow('mask front', cv2.WINDOW_NORMAL)
+    cv2.namedWindow('mask side', cv2.WINDOW_NORMAL)
+    mask1 = utils.select_rectangle_mask_using_mouse('mask front', first_img_front)
+    mask2 = utils.select_rectangle_mask_using_mouse('mask side', first_img_side)
+
     def processing_pipeline():
         for i, image_set in enumerate(image_provider):
             logger.info('step {}'.format(i))
             front_image, side_image = image_set
+
+            logger.info('image preprocessing')
+            _, front_image = utils.synchronize_images(first_img_front, front_image, mask1, mask1)
+            _, side_image = utils.synchronize_images(first_img_side, side_image, mask2, mask2)
+            _, side_image = utils.synchronize_images(front_image, side_image, mask1, mask2)
 
             logger.info('detecting people')
             front_views = detector.detect(front_image, camera_front)

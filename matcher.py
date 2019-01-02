@@ -93,6 +93,10 @@ class HistogramMatcher(PersonMatcher):
                     hellinger_histcmps.append(cv2.compareHist(front_hist, side_hist, cv2.HISTCMP_HELLINGER))
 
             if all(x is None for x in intersect_histcmps):
+                logger.debug('matched {} time frames'.format(len(results)))
+                if min(len(front_views), len(side_views)) != len(results):
+                    logger.warning('Some input views are not matched.')
+                logger.info("MATCHER: results")
                 return results  # no side histograms to match
 
             best_intersect_match = max(x for x in intersect_histcmps if x is not None)  # INTERSECT method: HIGHER value ~ HIGHER similarity
@@ -107,6 +111,7 @@ class HistogramMatcher(PersonMatcher):
         logger.debug('matched {} time frames'.format(len(results)))
         if min(len(front_views), len(side_views)) != len(results):
             logger.warning('Some input views are not matched.')
+
         return results
 
 
