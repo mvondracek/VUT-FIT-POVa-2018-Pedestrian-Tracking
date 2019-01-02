@@ -8,6 +8,7 @@ BUT - Brno University of Technology
 import datetime
 from typing import List
 
+import cv2
 import numpy as np
 
 from camera import Camera
@@ -51,6 +52,12 @@ class PersonView:
         roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
 
         return self.original_image[roi_top_left[1]:roi_bottom_right[1] + 1, roi_top_left[0]:roi_bottom_right[0] + 1]
+
+    def show(self):
+        # FIXME display the whole image and the person inside it? TODO change person subimage to mask
+        window_name = 'PersonView: {}'.format(self.__hash__())
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(window_name, self.person_image)
 
 
 class PersonTimeFrame:
