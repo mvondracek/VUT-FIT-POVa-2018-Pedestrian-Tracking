@@ -84,6 +84,7 @@ def main() -> ExitCode:
     #                                     side_image_path='testing_data/s3_f_side_single_x0y300.png',
     #                                     iterations=3
     #                                     )  # type: ImageProvider
+    logger.debug('Using {} as ImageProvider.'.format(type(image_provider).__name__))
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation

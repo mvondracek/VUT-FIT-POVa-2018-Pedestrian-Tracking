@@ -11,6 +11,9 @@ from typing import Tuple
 
 import cv2
 
+from utils.image_processing import synchronize_images
+from utils.utils import select_rectangle_mask_using_mouse
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +33,6 @@ class ImageProvider(ABC):
 class DummyImageProvider(ImageProvider):
     """Dummy provider provides a predefined pair of images for a number of iterations."""
     def __init__(self, front_image_path, side_image_path, iterations: int = 1):
-        logger.debug('Using DummyImageProvider as ImageProvider.')
         self.front_image = cv2.imread(front_image_path)
         self.side_image = cv2.imread(side_image_path)
         self.iterations = iterations
@@ -53,8 +55,8 @@ class ImageProviderFromVideo(ImageProvider):
         :param start: Start providing images from frame with this ordinary number. Skip first `start` frames.
         :param skipping: Skip specified number of frames each time before providing next image.
         """
-        logger.debug('Using ImageProviderFromVideo as ImageProvider.')
         self.finished = False
+        self.masks = {}  # TODO
         self.videos = []
         for path in paths_to_videos:
             video = cv2.VideoCapture(path)
@@ -97,3 +99,28 @@ class ImageProviderFromVideo(ImageProvider):
     def _release_videos(self):
         """OpenCV video readers' resources should be released properly."""
         map(lambda video: video.release(), self.videos)
+
+    def select_base_mask_for_img_preprocessing(self):
+        """
+        TODO explain why and what will happen
+        Select mask to sync images to the first image. Should be area that wont get covered by anything else
+        and is stable. Should cover the same are in image1 and image2.
+        """
+        window_name = '{} - mask selection for images sync'.format(type(self).__name__)
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        for i, video in enumerate(self.videos):
+            original_position = video.get(cv2.CAP_PROP_POS_FRAMES)
+
+            ret, frame = video.read()
+            if not ret:
+                raise Exception("Can't read from a video.")
+
+            self.masks[video] = select_rectangle_mask_using_mouse(window_name, frame)
+
+            video.set(cv2.CAP_PROP_POS_FRAMES, original_position)
+
+    def _do_image_preprocessing(self):
+        """
+        TODO
+        """
+        pass
