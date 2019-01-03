@@ -32,4 +32,4 @@ We have implemented a computer vision system intended for **tracking pedestrians
 ## Documentation
 
 * `./doc/VUT_FIT_POVa_2018_Pedestrian_Tracking_report.pdf` project report
-* `./xpetro11,xstast24,xvondr20.pdf` presentation slides
+* `./doc/VUT_FIT_POVa_2018_Pedestrian_Tracking_presentation.pdf` presentation slides
