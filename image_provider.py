@@ -119,8 +119,21 @@ class ImageProviderFromVideo(ImageProvider):
 
             video.set(cv2.CAP_PROP_POS_FRAMES, original_position)
 
-    def _do_image_preprocessing(self):
+    def _do_image_preprocessing(self, images):
         """
         TODO
         """
-        pass
+        first_video_image = None
+        for i, image in enumerate(images):
+            image = synchronize_images(self.reference_images[i], image)
+
+            if i == 0:
+                first_video_image = image
+                continue
+            else:
+                image = synchronize_images(first_video_image, image)
+
+            images[i] = image  # TODO is this really modified as needed in for cycle?
+
+    def _get_reference_image_for_each_video(self):
+        self.reference_images = []
