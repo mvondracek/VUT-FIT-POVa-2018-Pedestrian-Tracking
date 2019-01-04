@@ -12,7 +12,7 @@ from typing import List
 import cv2
 
 from person import PersonTimeFrame, PersonView
-from utils import utils
+from utils import calculate_flat_histogram
 
 logger = logging.getLogger(__name__)
 
@@ -61,11 +61,11 @@ class HistogramMatcher(PersonMatcher):
         side_histograms = []
         for view in front_views:
             torso = view.get_torso_subimage()
-            front_histograms.append(utils.calculate_flat_histogram(torso))
+            front_histograms.append(calculate_flat_histogram(torso))
 
         for view in side_views:
             torso = view.get_torso_subimage()
-            side_histograms.append(utils.calculate_flat_histogram(torso))
+            side_histograms.append(calculate_flat_histogram(torso))
 
         """
         # DEBUG CHECK

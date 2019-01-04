@@ -5,6 +5,7 @@ POVa - Computer Vision
 FIT - Faculty of Information Technology
 BUT - Brno University of Technology
 """
+import enum
 import json
 import logging
 import platform
@@ -19,7 +20,6 @@ import cv2
 import openpose
 from camera import Camera
 from person import PersonView
-from utils.enumeration import Enumeration
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,11 @@ class OpenPoseBinaryDetector(PeopleDetector):
     Detection using pre-compiled binary of OpenPose. Releases can be found at:
     https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
     """
-    class Models(Enumeration):
-        coco = 'COCO'
-        body_25 = 'BODY_25'
+    class SupportedOpenPoseModel(enum.Enum):
+        COCO = 'COCO'
+        BODY_25 = 'BODY_25'
 
-    models = Models()  # enum for OP models
-
-    def __init__(self, binary_path, using_gpu, net_resolution='-1x240', force_op_model=None):
+    def __init__(self, binary_path, using_gpu, net_resolution='-1x240', force_op_model: SupportedOpenPoseModel = None):
         """
         1) Go to OpenPose releases: https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
         2) Download and extract OpenPose folder (referred as OP_HOME).
@@ -86,15 +84,17 @@ class OpenPoseBinaryDetector(PeopleDetector):
         COCO for CPU. Because COCO is ~3x faster on CPU than BODY_25, but BODY_25 is ~40% faster on GPU.
             Make sure to have the requested model downloaded in OP_HOME/models folder.
         """
+        self.tmp_dir = None
+
         if 'Windows' not in platform.system():
             raise NotImplementedError("Only Windows binaries supported.")
 
         assert os.path.isfile(binary_path), "OpenPose binary not found. Path: {}".format(binary_path)
         self.binary_home = os.path.dirname(binary_path).rstrip('bin')  # OpenPoseDemo.exe is in bin/ subdirectory
 
-        if force_op_model and not self.models.contains(force_op_model):
-            logger.error("Using an unknown OpenPose model: {0}. Select from {1}.models: {2}!"
-                         .format(force_op_model, type(self).__name__,  self.models.enum_values()))
+        if force_op_model and force_op_model not in self.SupportedOpenPoseModel:
+            logger.error("Requested use of an unknown OpenPose model: {}. Select from {}!"
+                         .format(force_op_model, self.SupportedOpenPoseModel.__name__))
             raise NotImplementedError("Using unknown OpenPose model!")
 
         # prepare tmp directory for input images and results; tmp dir is deleted in obj destructor
@@ -121,15 +121,15 @@ class OpenPoseBinaryDetector(PeopleDetector):
         self.cmd += ' --output_resolution 0x0'  # don't display the image -> speedup
         self.cmd += ' --render_pose 0'  # don't draw result into the image -> speedup
         if using_gpu is True:
-            self.model = self.models.body_25
-            self.cmd += ' --num_gpu 1' if using_gpu else ''  # use one GPU; no auto-detection -> faster
+            self.model = self.SupportedOpenPoseModel.BODY_25
+            self.cmd += ' --num_gpu 1'  # use one GPU; no auto-detection -> faster
         else:
-            self.model = self.models.coco
+            self.model = self.SupportedOpenPoseModel.COCO
 
         if force_op_model:
             self.model = force_op_model
 
-        self.cmd += ' --model_pose {}'.format(self.model)
+        self.cmd += ' --model_pose {}'.format(self.model.value)
 
     def detect(self, image, camera: Camera) -> List[PersonView]:
         """
@@ -204,12 +204,12 @@ class OpenPoseBinaryDetector(PeopleDetector):
         results = []
         for person in detection_result['people']:
             body_parts = self.get_body_parts_from_keypoints(person['pose_keypoints_2d'])
-            person_image = self.get_person_subimage(image, body_parts)
             neck, hip_center = self.get_neck_and_hip_coordinates(body_parts)
             if not neck or not hip_center:
                 logger.warning("Person does not have nose or hips detected.")
                 continue
 
+            person_image = self.get_person_subimage(image, body_parts)
             results.append(PersonView(image, person_image, camera, neck, hip_center))
 
         return results
@@ -236,15 +236,19 @@ class OpenPoseBinaryDetector(PeopleDetector):
 
     @staticmethod
     def get_person_subimage(image, body_parts: List[Optional[Tuple[int, int]]]):
-        """Return subimage defined by person's bounding box."""
+        """Return subimage defined by person's bounding box. If no valid body parts found, return None."""
         # TODO combine this with background substraction to extract just the person, not background
-        top_left_x = min(part[0] for part in body_parts if part is not None)
-        top_left_y = min(part[1] for part in body_parts if part is not None)
-        bottom_right_x = max(part[0] for part in body_parts if part is not None)
-        bottom_right_y = max(part[1] for part in body_parts if part is not None)
+        # remove invalid body parts (= None)
+        valid_parts = list(filter(None, body_parts))
+        if not valid_parts:
+            return None
 
-        # last item in indexed range is excluded in python, but we want the bottom_right point included -> need +1
-        return image[top_left_y:bottom_right_y+1, top_left_x:bottom_right_x+1]
+        # sort coordinates (lowest to highest)
+        sorted_x_coords = sorted(part[0] for part in valid_parts)
+        sorted_y_coords = sorted(part[1] for part in valid_parts)
+
+        # last item in indexed range is excluded in python, but we want the bottom right point of subimg included -> +1
+        return image[sorted_y_coords[0]:sorted_y_coords[-1]+1, sorted_x_coords[0]:sorted_x_coords[-1]+1]
 
     def get_neck_and_hip_coordinates(self, body_parts: List[Optional[Tuple[int, int]]]):
         """
@@ -252,12 +256,12 @@ class OpenPoseBinaryDetector(PeopleDetector):
         If body part not detected, return None for that part. Keypoints (body parts) order can be found at:
         https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/v1.4.0/doc/output.md
         """
-        if self.model == self.models.body_25:
+        if self.model == self.SupportedOpenPoseModel.BODY_25:
             neck = body_parts[1]
             hip = body_parts[8]
             hip_r = body_parts[9]
             hip_l = body_parts[12]
-        elif self.model == self.models.coco:
+        elif self.model == self.SupportedOpenPoseModel.COCO:
             neck = body_parts[1]
             hip = None
             hip_r = body_parts[8]
@@ -283,4 +287,8 @@ class OpenPoseBinaryDetector(PeopleDetector):
 
     def __del__(self):
         """Delete detector's temporary folder, so images and results are not kept for another run."""
-        shutil.rmtree(self.tmp_dir, ignore_errors=True)  # ignore e.g. folder doesn't exist (if deleted manually)
+        # NOTE: Destructor of an object is called even in a case of an unsuccessful initialization. If `__init__` raises
+        # an exception, some attributes may be uninitialized. Therefore we need to check `self.tmp_dir` before
+        # accessing it.
+        if self.tmp_dir:
+            shutil.rmtree(self.tmp_dir, ignore_errors=True)  # ignore e.g. folder doesn't exist (if deleted manually)
