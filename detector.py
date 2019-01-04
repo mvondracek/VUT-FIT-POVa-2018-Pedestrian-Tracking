@@ -84,6 +84,8 @@ class OpenPoseBinaryDetector(PeopleDetector):
         COCO for CPU. Because COCO is ~3x faster on CPU than BODY_25, but BODY_25 is ~40% faster on GPU.
             Make sure to have the requested model downloaded in OP_HOME/models folder.
         """
+        self.tmp_dir = None
+
         if 'Windows' not in platform.system():
             raise NotImplementedError("Only Windows binaries supported.")
 
@@ -281,4 +283,8 @@ class OpenPoseBinaryDetector(PeopleDetector):
 
     def __del__(self):
         """Delete detector's temporary folder, so images and results are not kept for another run."""
-        shutil.rmtree(self.tmp_dir, ignore_errors=True)  # ignore e.g. folder doesn't exist (if deleted manually)
+        # NOTE: Destructor of an object is called even in a case of an unsuccessful initialization. If `__init__` raises
+        # an exception, some attributes may be uninitialized. Therefore we need to check `self.tmp_dir` before
+        # accessing it.
+        if self.tmp_dir:
+            shutil.rmtree(self.tmp_dir, ignore_errors=True)  # ignore e.g. folder doesn't exist (if deleted manually)
