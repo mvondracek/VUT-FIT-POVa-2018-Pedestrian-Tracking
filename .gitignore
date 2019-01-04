@@ -1,11 +1,7 @@
-
 # Openpose Branch
 openpose/pose/coco/pose_iter_440000.caffemodel
 openpose/data/
 openpose/output_*
-
-
-
 
 
 # IDE files

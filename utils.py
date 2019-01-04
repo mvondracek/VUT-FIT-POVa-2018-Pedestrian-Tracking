@@ -1,3 +1,10 @@
+"""
+Pedestrian Tracking
+2018
+POVa - Computer Vision
+FIT - Faculty of Information Technology
+BUT - Brno University of Technology
+"""
 import math
 
 import cv2

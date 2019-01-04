@@ -21,10 +21,8 @@ class Camera:
         """
         self.name = name
         self.focal_length = focal_length
-        # TODO Position in a specific scene?
         self.position = position
         self.orientation = orientation / np.linalg.norm(orientation)  # convert to unit vector
-        # TODO store calibrated parameters of this camera, which are used for triangulation
 
     @staticmethod
     def calibrate_focal_length(real_distance: int, real_size: int, pixel_size: int) -> float:

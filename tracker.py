@@ -12,7 +12,7 @@ from typing import List
 import cv2
 
 from person import PersonTimeFrame, Person
-from utils import utils
+from utils import calculate_flat_histogram
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class HistogramTracker(PersonTracker):
             torso = view.get_torso_subimage()
             # cv2.imshow('torso view={}'.format(id(view)), torso)  # used for debugging
             # cv2.waitKey(1)  # used for debugging
-            histogram = utils.calculate_flat_histogram(torso)
+            histogram = calculate_flat_histogram(torso)
 
             intersect_histcmps = []
             hellinger_histcmps = []
@@ -95,7 +95,7 @@ class HistogramTracker(PersonTracker):
                 # cv2.imshow('torso person.name={}, view={}'.format(person.name, id(view)), torso)  # used for debugging
                 # cv2.waitKey(1)  # used for debugging
 
-                front_histogram = utils.calculate_flat_histogram(torso)
+                front_histogram = calculate_flat_histogram(torso)
                 intersect_histcmps.append(cv2.compareHist(front_histogram, histogram, cv2.HISTCMP_INTERSECT))
                 hellinger_histcmps.append(cv2.compareHist(front_histogram, histogram, cv2.HISTCMP_HELLINGER))
 
