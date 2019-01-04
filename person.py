@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from camera import Camera
-from utils import utils
+from utils import euclidean_distance
 
 
 class PersonView:
@@ -39,7 +39,7 @@ class PersonView:
         :return: subimage containing only the torso
         """
         image_width = self.original_image.shape[1]
-        body_height = int(utils.euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
+        body_height = int(euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
         # an average body's width from side is about one third of the height (half of the height from front)
         half_body_width = int(body_height / 6)
 
