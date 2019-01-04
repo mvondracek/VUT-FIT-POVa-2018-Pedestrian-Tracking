@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
-from utils.utils import RectangleSelectionCallback
-
-
-
+from utils import select_rectangle_mask_using_mouse
 
 
 def synchronize_images(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO move to image provider, add logging (select, selected 1 and 2)

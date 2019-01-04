@@ -12,7 +12,7 @@ from typing import Tuple
 import cv2
 
 from utils.image_processing import synchronize_images
-from utils.utils import select_rectangle_mask_using_mouse
+from utils import select_rectangle_mask_using_mouse
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class ImageProviderFromVideo(ImageProvider):
         """OpenCV video readers' resources should be released properly."""
         map(lambda video: video.release(), self.videos)
 
-    def select_base_mask_for_img_preprocessing(self):
+    def select_masks_for_img_preprocessing(self):
         """
         TODO explain why and what will happen
         Select mask to sync images to the first image. Should be area that wont get covered by anything else
@@ -121,17 +121,21 @@ class ImageProviderFromVideo(ImageProvider):
 
     def _do_image_preprocessing(self, images):
         """
-        TODO
+        Images from one source are synced with a reference image (e.g. the first image) from that source, so they are
+        similar in meaning of ligthness or colors.
+        All images in one step/iteration are then synced with one image from that step (e.g. image from first source).
         """
-        first_video_image = None
+        first_video_image = None  # other images in current step are synced with this one
         for i, image in enumerate(images):
-            image = synchronize_images(self.reference_images[i], image)
+            # sync every image with its corresponding reference image
+            _, image = synchronize_images(self.reference_images[i], image)
 
+            # sync all images in this iteration with image from one video
             if i == 0:
                 first_video_image = image
                 continue
             else:
-                image = synchronize_images(first_video_image, image)
+                _, image = synchronize_images(first_video_image, image)
 
             images[i] = image  # TODO is this really modified as needed in for cycle?
 
