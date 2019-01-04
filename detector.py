@@ -122,7 +122,7 @@ class OpenPoseBinaryDetector(PeopleDetector):
         self.cmd += ' --render_pose 0'  # don't draw result into the image -> speedup
         if using_gpu is True:
             self.model = self.SupportedOpenPoseModel.BODY_25
-            self.cmd += ' --num_gpu 1' if using_gpu else ''  # use one GPU; no auto-detection -> faster
+            self.cmd += ' --num_gpu 1'  # use one GPU; no auto-detection -> faster
         else:
             self.model = self.SupportedOpenPoseModel.COCO
 
