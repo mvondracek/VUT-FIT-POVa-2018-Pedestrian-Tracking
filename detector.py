@@ -5,6 +5,7 @@ POVa - Computer Vision
 FIT - Faculty of Information Technology
 BUT - Brno University of Technology
 """
+import enum
 import json
 import logging
 import platform
@@ -19,7 +20,6 @@ import cv2
 import openpose
 from camera import Camera
 from person import PersonView
-from utils.enumeration import Enumeration
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,11 @@ class OpenPoseBinaryDetector(PeopleDetector):
     Detection using pre-compiled binary of OpenPose. Releases can be found at:
     https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
     """
-    class Models(Enumeration):
-        coco = 'COCO'
-        body_25 = 'BODY_25'
+    class SupportedOpenPoseModel(enum.Enum):
+        COCO = 'COCO'
+        BODY_25 = 'BODY_25'
 
-    models = Models()  # enum for OP models
-
-    def __init__(self, binary_path, using_gpu, net_resolution='-1x240', force_op_model=None):
+    def __init__(self, binary_path, using_gpu, net_resolution='-1x240', force_op_model: SupportedOpenPoseModel = None):
         """
         1) Go to OpenPose releases: https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases
         2) Download and extract OpenPose folder (referred as OP_HOME).
@@ -92,9 +90,9 @@ class OpenPoseBinaryDetector(PeopleDetector):
         assert os.path.isfile(binary_path), "OpenPose binary not found. Path: {}".format(binary_path)
         self.binary_home = os.path.dirname(binary_path).rstrip('bin')  # OpenPoseDemo.exe is in bin/ subdirectory
 
-        if force_op_model and not self.models.contains(force_op_model):
-            logger.error("Using an unknown OpenPose model: {0}. Select from {1}.models: {2}!"
-                         .format(force_op_model, type(self).__name__,  self.models.enum_values()))
+        if force_op_model and force_op_model not in self.SupportedOpenPoseModel:
+            logger.error("Requested use of an unknown OpenPose model: {}. Select from {}!"
+                         .format(force_op_model, self.SupportedOpenPoseModel.__name__))
             raise NotImplementedError("Using unknown OpenPose model!")
 
         # prepare tmp directory for input images and results; tmp dir is deleted in obj destructor
@@ -121,15 +119,15 @@ class OpenPoseBinaryDetector(PeopleDetector):
         self.cmd += ' --output_resolution 0x0'  # don't display the image -> speedup
         self.cmd += ' --render_pose 0'  # don't draw result into the image -> speedup
         if using_gpu is True:
-            self.model = self.models.body_25
+            self.model = self.SupportedOpenPoseModel.BODY_25
             self.cmd += ' --num_gpu 1' if using_gpu else ''  # use one GPU; no auto-detection -> faster
         else:
-            self.model = self.models.coco
+            self.model = self.SupportedOpenPoseModel.COCO
 
         if force_op_model:
             self.model = force_op_model
 
-        self.cmd += ' --model_pose {}'.format(self.model)
+        self.cmd += ' --model_pose {}'.format(self.model.value)
 
     def detect(self, image, camera: Camera) -> List[PersonView]:
         """
@@ -252,12 +250,12 @@ class OpenPoseBinaryDetector(PeopleDetector):
         If body part not detected, return None for that part. Keypoints (body parts) order can be found at:
         https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/v1.4.0/doc/output.md
         """
-        if self.model == self.models.body_25:
+        if self.model == self.SupportedOpenPoseModel.BODY_25:
             neck = body_parts[1]
             hip = body_parts[8]
             hip_r = body_parts[9]
             hip_l = body_parts[12]
-        elif self.model == self.models.coco:
+        elif self.model == self.SupportedOpenPoseModel.COCO:
             neck = body_parts[1]
             hip = None
             hip_r = body_parts[8]
