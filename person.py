@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from camera import Camera
-from utils import euclidean_distance
+from tools import euclidean_distance
 
 
 class PersonView:

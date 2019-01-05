@@ -1,45 +1,47 @@
 import cv2
 import numpy as np
-from utils import select_rectangle_mask_using_mouse
+from tools import select_rectangle_mask_using_mouse
 
 
-def synchronize_images(image1, image2, mask1=None, mask2=None, interactive=False):  # TODO move to image provider, add logging (select, selected 1 and 2)
+def synchronize_image(ref_img, image, mask1=None, mask2=None, interactive=False):
     """
-    Synchronize image2 with image1 based on mean color & light value in the whole images or in areas specified by masks.
+    Synchronize image with ref_image based on mean color & light value in the whole images or in areas specified by masks.
     Mask area can also be selected manually using mouse in interactive mode.
-    :param image1: sample image (BGR type), remains unchanged
-    :param image2: image (BGR type) that is adjusted to correspond with light intensity of image1
-    :param mask1: mean value of light is calculated only in this area for image1
-    :param mask2: mean value of light is calculated only in this area for image2
+    :param ref_img: sample image (BGR type), remains unchanged
+    :param image: image (BGR type) that is adjusted to correspond with light intensity of ref_img
+    :param mask1: mean value of light is calculated only in this area for ref_img
+    :param mask2: mean value of light is calculated only in this area for image
     :param interactive: True to enable interactive mode where mask can be selected manually in image view
-    :return: image1 (unchanged), image2 (changed)
+    :return: image2 (changed)
     """
     # windows used only if interactive selection
     window1 = None
     window2 = None
     if interactive:
-        window1 = 'Sync Images - image 1: interactive mask selection'
-        window2 = 'Sync Images - image 2: interactive mask selection'
-        mask1 = select_rectangle_mask_using_mouse(window1, image1)
-        mask2 = select_rectangle_mask_using_mouse(window2, image2)
+        window1 = 'Sync Images - ref_img: interactive mask selection'
+        window2 = 'Sync Images - image: interactive mask selection'
+        mask1 = select_rectangle_mask_using_mouse(window1, ref_img)
+        mask2 = select_rectangle_mask_using_mouse(window2, image)
 
-    # adjust image2 (based on image1), image1 is untouched
-    image1, image2 = synchronize_images_colors(image1, image2, mask1=mask1, mask2=mask2, interactive=False)
-    image1, image2 = synchronize_images_light_intensity(image1, image2, mask1=mask1, mask2=mask2, interactive=False)
+    # adjust image (based on ref_img), ref_img is untouched
+    image = synchronize_image_colors(ref_img, image, mask1=mask1, mask2=mask2, interactive=False)
+    image = synchronize_image_light_intensity(ref_img, image, mask1=mask1, mask2=mask2, interactive=False)
 
     # show results in interactive mode (to see the changes)
     if interactive:
-        cv2.imshow(window1, image1)
-        cv2.imshow(window2, image2)
+        cv2.imshow(window1, ref_img)
+        cv2.imshow(window2, image)
         cv2.waitKey()
+        cv2.destroyWindow(window1)
+        cv2.destroyWindow(window2)
 
-    return image1, image2
+    return image
 
 
-def synchronize_images_colors(image1, image2, mask1=None, mask2=None, interactive=False):
+def synchronize_image_colors(image1, image2, mask1=None, mask2=None, interactive=False):
     """
     Synchronize image2 with image1 based on mean color values in the whole images or in areas specified by masks.
-    Mask area can also be selected manually using mouse in interactive mode.
+    Mask area can also be selected manually using mouse in interactive mode. Image1 remains unchanged.
     """
     # windows used only if interactive selection
     window1 = None
@@ -69,14 +71,16 @@ def synchronize_images_colors(image1, image2, mask1=None, mask2=None, interactiv
         cv2.imshow(window1, image1)
         cv2.imshow(window2, image2)
         cv2.waitKey()
+        cv2.destroyWindow(window1)
+        cv2.destroyWindow(window2)
 
-    return image1, image2
+    return image2
 
 
-def synchronize_images_light_intensity(image1, image2, mask1=None, mask2=None, interactive=False):
+def synchronize_image_light_intensity(image1, image2, mask1=None, mask2=None, interactive=False):
     """
     Synchronize image2 with image1 based on mean light value in the whole images or in areas specified by masks.
-    Mask area can also be selected manually using mouse in interactive mode.
+    Mask area can also be selected manually using mouse in interactive mode. Image1 remains unchanged.
     """
     # windows used only if interactive selection
     window1 = None
@@ -115,5 +119,7 @@ def synchronize_images_light_intensity(image1, image2, mask1=None, mask2=None, i
         cv2.imshow(window1, image1)
         cv2.imshow(window2, image2)
         cv2.waitKey()
+        cv2.destroyWindow(window1)
+        cv2.destroyWindow(window2)
 
-    return image1, image2
+    return image2

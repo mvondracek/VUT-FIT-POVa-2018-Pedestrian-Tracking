@@ -12,7 +12,7 @@ from typing import List
 import cv2
 
 from person import PersonTimeFrame, PersonView
-from utils import calculate_flat_histogram
+from tools import calculate_flat_histogram
 
 logger = logging.getLogger(__name__)
 

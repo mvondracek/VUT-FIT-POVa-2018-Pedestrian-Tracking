@@ -20,10 +20,10 @@ from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
 from detector import OpenPoseDetector, PeopleDetector
 from image_provider import ImageProvider, ImageProviderFromVideo, DummyImageProvider
+from image_tweaks import ImgTweaksBasedOnPresumablySameArea
 from matcher import PersonMatcher, HistogramMatcher
 from tracker import PersonTracker, HistogramTracker
 from triangulation import CameraDistanceTriangulation, Triangulation
-from utils import utils
 from visualizer import Plotter3D, Visualizer
 
 logger = logging.getLogger(__name__)
@@ -74,16 +74,12 @@ def main() -> ExitCode:
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
+    image_tweaker = ImgTweaksBasedOnPresumablySameArea(interactive=True)
     image_provider = ImageProviderFromVideo(
-         # ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
-         # start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
-         ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
-         start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
-         skipping=10)  # type: ImageProvider # (30 fps)
-    # image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_single_x0y300.png',
-    #                                     side_image_path='testing_data/s3_f_side_single_x0y300.png',
-    #                                     iterations=3
-    #                                     )  # type: ImageProvider
+        ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
+        start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
+        skipping=10,
+        image_tweaker=image_tweaker)  # type: ImageProvider # (30 fps)
     logger.debug('Using {} as ImageProvider.'.format(type(image_provider).__name__))
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
@@ -92,34 +88,10 @@ def main() -> ExitCode:
     visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
-    first_img_front = None
-    first_img_side = None
-    mask1 = None
-    mask2 = None
-    video_paths = ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov']
-    video1 = cv2.VideoCapture(video_paths[0])
-    video2 = cv2.VideoCapture(video_paths[1])
-    _, first_img_front = video1.read()
-    _, first_img_side = video2.read()
-    video1.release()
-    video2.release()
-
-    logger.info('Select mask to sync images to the first image. Should be area that wont'
-                'get covered by anything else and is stable. Should cover the same are in image1 and image2.')
-    cv2.namedWindow('mask front', cv2.WINDOW_NORMAL)
-    cv2.namedWindow('mask side', cv2.WINDOW_NORMAL)
-    mask1 = utils.select_rectangle_mask_using_mouse('mask front', first_img_front)
-    mask2 = utils.select_rectangle_mask_using_mouse('mask side', first_img_side)
-
     def processing_pipeline():
         for i, image_set in enumerate(image_provider):
             logger.info('step {}'.format(i))
             front_image, side_image = image_set
-
-            logger.info('image preprocessing')
-            _, front_image = utils.synchronize_images(first_img_front, front_image, mask1, mask1)
-            _, side_image = utils.synchronize_images(first_img_side, side_image, mask2, mask2)
-            _, side_image = utils.synchronize_images(front_image, side_image, mask1, mask2)
 
             logger.info('detecting people')
             front_views = detector.detect(front_image, camera_front)
