@@ -87,16 +87,23 @@ class ImageProviderFromVideo(ImageProvider):
                 raise StopIteration
             else:
                 images.append(frame)
-                if __debug__:
-                    window_name = 'ImageProviderFromVideo={} video={}'.format(id(self), id(video))
-                    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-                    cv2.imshow(window_name, frame)
-                    cv2.resizeWindow(window_name, 384, 216)
-                    cv2.waitKey(1)
 
         if self.image_tweaks:
             images = self.image_tweaks.apply(images)
+
+        if __debug__:
+            self.show_images(images)
+
         return tuple(images)
+
+    @staticmethod
+    def show_images(images):
+        for i, image in enumerate(images):
+            window_name = 'ImageProviderFromVideo video={}'.format(i)
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_name, image)
+            cv2.resizeWindow(window_name, 384, 216)
+            cv2.waitKey(1)
 
     def _release_videos(self):
         """OpenCV video readers' resources should be released properly."""
