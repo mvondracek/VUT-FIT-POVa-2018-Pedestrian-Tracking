@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 class ImageTweaks(ABC):
     """
     TODO name? image processing/processor, image tweaks/tweaker, image preparation/preparator?
+    This class is used to process images. It can be used by image_provider to adjust images by needs.
     """
     @abstractmethod
     def apply(self, images: List[np.ndarray]) -> List[np.ndarray]:
@@ -69,6 +70,7 @@ class ImgTweaksBasedOnPresumablySameArea(ImageTweaks):
         Images from one source are synced with a reference image from that source.
         Images in one step/iteration are then synced with one image from that step.
         """
+        # TODO add blur? compare results with/without blur and decide
         if self.is_first_run:
             self.init_based_on_input(images)
 
@@ -124,9 +126,3 @@ class ImgTweaksBasedOnPresumablySameArea(ImageTweaks):
             synced_images.append(synced_image)
 
         return synced_images
-
-
-if __name__ == '__main__':
-    img1 = cv2.imread('testing_data/s3_single_30_side.png')
-    tw = ImgTweaksBasedOnPresumablySameArea(interactive=True)
-
