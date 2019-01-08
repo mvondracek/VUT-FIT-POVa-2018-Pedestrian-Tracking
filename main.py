@@ -8,9 +8,10 @@ BUT - Brno University of Technology
 """
 import logging
 import sys
-import threading
+import multiprocessing
 import warnings
 from enum import unique, Enum
+from typing import List
 
 import coloredlogs as coloredlogs
 import cv2
@@ -51,28 +52,16 @@ class ExitCode(Enum):
     """Program received SIGINT."""
 
 
-def main() -> ExitCode:
-    logging.captureWarnings(True)
-    warnings.simplefilter('always', ResourceWarning)
-    coloredlogs.install(level=logging.DEBUG)
-    logging.getLogger('matplotlib').setLevel(logging.INFO)
-    logger.debug('main started')
-
+def processing_pipeline(cameras: List[Camera], z_level: int, output_queue: multiprocessing.Queue):
+    """
+    :param cameras: cameras in order as their corresponding images will be used
+    :param z_level: cameras height
+    :param output_queue: <multiprocessing.Queue> results (tracked people list) are put to this Q after each step
+    :return:
+    """
+    # TODO extract this to a class, so it can be like Pipeline -> ProjectPipeline(Pipeline) with run() method
     # region Initialization
     logger.debug('initializing pipeline')
-    z_level = 147
-    camera_front = Camera(
-        name='front camera (m)',
-        focal_length=FOCAL_LENGTH_CAMERA_M,
-        position=(0, 0, z_level),
-        orientation=(0, 1, 0)
-    )
-    camera_side = Camera(
-        name='side camera (f)',
-        focal_length=FOCAL_LENGTH_CAMERA_F,
-        position=(-200, 0, z_level),
-        orientation=(1, 1, 0)
-    )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
     # create masks to config image tweaks (without need of user interaction)
@@ -94,44 +83,76 @@ def main() -> ExitCode:
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = HistogramTracker()  # type: PersonTracker
-    visualizer = Plotter3D(tracker.people, [camera_front, camera_side])  # type: Visualizer
     # endregion
 
-    def processing_pipeline():
-        for i, image_set in enumerate(image_provider):
-            logger.info('step {}'.format(i))
-            front_image, side_image = image_set
+    for i, image_set in enumerate(image_provider):
+        logger.info('step {}'.format(i))
+        front_image, side_image = image_set
 
-            logger.info('detecting people')
-            front_views = detector.detect(front_image, camera_front)
-            side_views = detector.detect(side_image, camera_side)
+        logger.info('detecting people')
+        front_views = detector.detect(front_image, cameras[0])
+        side_views = detector.detect(side_image, cameras[1])
 
-            logger.info('matching people')
-            time_frames = matcher.match(front_views, side_views)
+        logger.info('matching people')
+        time_frames = matcher.match(front_views, side_views)
 
-            logger.info('locating people')
-            time_frames_located = []
-            for time_frame in time_frames:
-                located_frame = triangulation.locate(time_frame)
-                time_frames_located.append(located_frame)
+        logger.info('locating people')
+        time_frames_located = []
+        for time_frame in time_frames:
+            located_frame = triangulation.locate(time_frame)
+            time_frames_located.append(located_frame)
 
-            logger.info('tracking people')
-            for time_frame in time_frames_located:
-                person = tracker.track(time_frame)
-                logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
+        logger.info('tracking people')
+        for time_frame in time_frames_located:
+            person = tracker.track(time_frame)
+            logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
 
-    processing_thread = threading.Thread(target=processing_pipeline)
+        for person in tracker.people:
+            # TODO distance_planes contains lambdas -> can't pickle to queue; but they're just for debug -> remove
+            for tf in person.time_frames:
+                tf.distance_planes = None
+
+        output_queue.put(tracker.people)
+
+
+def main() -> ExitCode:
+    logging.captureWarnings(True)
+    warnings.simplefilter('always', ResourceWarning)
+    coloredlogs.install(level=logging.DEBUG)
+    logging.getLogger('matplotlib').setLevel(logging.INFO)
+    logger.debug('main started')
+
+    z_level = 147
+    camera_front = Camera(
+        name='front camera (m)',
+        focal_length=FOCAL_LENGTH_CAMERA_M,
+        position=(0, 0, z_level),
+        orientation=(0, 1, 0)
+    )
+    camera_side = Camera(
+        name='side camera (f)',
+        focal_length=FOCAL_LENGTH_CAMERA_F,
+        position=(-200, 0, z_level),
+        orientation=(1, 1, 0)
+    )
+    visualizer = Plotter3D([], [camera_front, camera_side])  # type: Visualizer
+    results_queue = multiprocessing.SimpleQueue()
+
+    processing_thread = multiprocessing.Process(target=processing_pipeline,
+                                                args=([camera_front, camera_side], z_level, results_queue))
     processing_thread.start()
 
     while True:
-        visualizer.render()
-        plt.pause(0.1)  # evil pause is pausing all threads, not only main
-        plt.show()
+        while not results_queue.empty():
+            visualizer.render(results_queue.get())
+            plt.show()
+
+        plt.pause(1)  # evil pause pauses all threads, not just main -> threading won't work, needs multiprocessing
         if cv2.waitKey(2) & 0xFF == ord('q'):
             logger.debug('break')
             break
 
-    # TODO: Better thread handling. Better application shutdown.
+    # FIXME: Better thread/process handling. Better application shutdown.
     processing_thread.join(timeout=10)
 
     return ExitCode.EX_OK
