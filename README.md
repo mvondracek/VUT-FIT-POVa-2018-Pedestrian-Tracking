@@ -19,9 +19,17 @@ We have implemented a computer vision system intended for **tracking pedestrians
 1) **Python 3.7** is required.
 2) Please create a virtual environment for this project.
 3) With activated virtual environment, run: `pip install -r requirements.txt` in the project folder.
-4) Download *OpenPose* model from `http://posefs1.perception.cs.cmu.edu/OpenPose/models/pose/coco/pose_iter_440000.caffemodel`
-   and save it to `openpose/pose/coco`.
-5) Please download testing data from `https://github.com/mvondracek/VUT-FIT-POVa-2018-Pedestrian-Tracking`
+4) Prepare selected person detection backend — one from the following:
+   * Download *OpenPose*  [GPU binaries](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.4.0/openpose-1.4.0-win64-gpu-binaries_recommended.zip).
+     and extract them to `openpose`. Run `openpose/openpose-1.4.0-win64-gpu-binaries/models/getModels.bat`.
+   * or download *OpenPose* [CPU binaries](https://github.com/CMU-Perceptual-Computing-Lab/openpose/releases/download/v1.4.0/openpose-1.4.0-win64-cpu-binaries.zip)
+     and extract them to `openpose`. Run `openpose/openpose-1.4.0-win64-cpu-binaries/models/getModels.bat`.
+   * or download just [*OpenPose* model](http://posefs1.perception.cs.cmu.edu/OpenPose/models/pose/coco/pose_iter_440000.caffemodel)
+     and save it to `openpose/pose/coco`.
+5) Select detector used in `main.py` according to your detection backend from previous step.
+   * `OpenPoseBinaryDetector` if you use GPU or CPU binaries.
+   * `OpenPoseDetector` if you have downloaded just *OpenPose* model.
+6) Please download testing data from `https://github.com/mvondracek/VUT-FIT-POVa-2018-Pedestrian-Tracking`
 
 ## Run
 
