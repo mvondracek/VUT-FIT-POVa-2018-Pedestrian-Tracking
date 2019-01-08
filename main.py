@@ -74,10 +74,17 @@ def processing_pipeline(cameras: List[Camera], z_level: int, output_queue: multi
     s_mask[s_rect[0][1]:s_rect[1][1] + 1, s_rect[0][0]:s_rect[1][0] + 1] = 1
     image_tweaker = ImgTweaksBasedOnPresumablySameArea(interactive=False, masks=[f_mask, s_mask])
     image_provider = ImageProviderFromVideo(
+        # ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
+        # start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
         ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
         start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
         skipping=10,
         image_tweaker=image_tweaker)  # type: ImageProvider # (30 fps)
+
+    # image_provider = DummyImageProvider(front_image_path='testing_data/s3_m_front_single_x0y300.png',
+    #                                     side_image_path='testing_data/s3_f_side_single_x0y300.png',
+    #                                     iterations=3
+    #                                     )  # type: ImageProvider
     logger.debug('Using {} as ImageProvider.'.format(type(image_provider).__name__))
     detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
     matcher = HistogramMatcher()  # type: PersonMatcher
@@ -107,10 +114,19 @@ def processing_pipeline(cameras: List[Camera], z_level: int, output_queue: multi
             person = tracker.track(time_frame)
             logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
 
+        # remove unnecessary items, so results queue does not run out of memory
         for person in tracker.people:
             # TODO distance_planes contains lambdas -> can't pickle to queue; but they're just for debug -> remove
-            for tf in person.time_frames:
-                tf.distance_planes = None
+            person.time_frames[-1].distance_planes = None  # cleaning the newest time-frame each step
+
+            # views contain images (not needed anymore), leading to results queue memory error -> clean images
+            try:
+                # last TF needed for tracking of the next TF > do NOT clean the last TF, just the second last
+                for view in person.time_frames[-2].views:
+                    view.original_image = None
+                    view.person_image = None
+            except IndexError:
+                pass  # person has just one time-frame
 
         output_queue.put(tracker.people)
 
@@ -136,7 +152,7 @@ def main() -> ExitCode:
         orientation=(1, 1, 0)
     )
     visualizer = Plotter3D([], [camera_front, camera_side])  # type: Visualizer
-    results_queue = multiprocessing.SimpleQueue()
+    results_queue = multiprocessing.Queue()
 
     processing_thread = multiprocessing.Process(target=processing_pipeline,
                                                 args=([camera_front, camera_side], z_level, results_queue))
