@@ -70,7 +70,7 @@ class PersonTimeFrame:
         self.views = views
         self.coordinates_3d = None
 
-        self.distance_planes = []  # TODO This is used only for visualization
+        self.distance_planes = []  # TODO This is used only for visualization of planes (debug)
         self.real_subject_coordinates_3d = None  # TODO This is used only for testing
         self.intersection_line = None  # TODO This is used only for visualization
 

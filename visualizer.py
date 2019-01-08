@@ -22,9 +22,10 @@ class Visualizer(ABC):
         self._people = people
 
     @abstractmethod
-    def render(self) -> None:
+    def render(self, people: List[Person]=None) -> None:
         """
         Render current scene with tracked paths of people.
+        :param people: [optional] updates people to render (replaces previously rendered people)
         """
         pass
 
@@ -59,7 +60,10 @@ class Plotter3D(Visualizer):
         self.ax.set_ylabel('y [cm]')
         self.ax.set_zlabel('z [cm]')
 
-    def render(self):
+    def render(self, people: List[Person]=None):
+        if people:
+            self._people = people
+
         plt.cla()
         self._render_cameras()
         self._render_people_paths()
