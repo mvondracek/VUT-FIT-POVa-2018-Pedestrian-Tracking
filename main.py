@@ -15,6 +15,7 @@ from enum import unique, Enum
 import coloredlogs as coloredlogs
 import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
@@ -74,7 +75,15 @@ def main() -> ExitCode:
     )
     prototxt_path = "openpose/pose/coco/pose_deploy_linevec.prototxt"
     caffemodel_path = "openpose/pose/coco/pose_iter_440000.caffemodel"
-    image_tweaker = ImgTweaksBasedOnPresumablySameArea(interactive=True)
+    # create masks to config image tweaks (without need of user interaction)
+    f_rect = ([1443, 428], [1626, 481])
+    s_rect = ([373, 346], [534, 389])
+    mask_shape = (1080, 1920)
+    f_mask = np.zeros(mask_shape, dtype=np.uint8)  # mask needs to has one dimension less
+    f_mask[f_rect[0][1]:f_rect[1][1] + 1, f_rect[0][0]:f_rect[1][0] + 1] = 1
+    s_mask = np.zeros(mask_shape, dtype=np.uint8)  # mask needs to has one dimension less
+    s_mask[s_rect[0][1]:s_rect[1][1] + 1, s_rect[0][0]:s_rect[1][0] + 1] = 1
+    image_tweaker = ImgTweaksBasedOnPresumablySameArea(interactive=False, masks=[f_mask, s_mask])
     image_provider = ImageProviderFromVideo(
         ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
         start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
@@ -116,7 +125,7 @@ def main() -> ExitCode:
 
     while True:
         visualizer.render()
-        plt.pause(2)
+        plt.pause(0.1)  # evil pause is pausing all threads, not only main
         plt.show()
         if cv2.waitKey(2) & 0xFF == ord('q'):
             logger.debug('break')

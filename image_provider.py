@@ -92,7 +92,8 @@ class ImageProviderFromVideo(ImageProvider):
             images = self.image_tweaks.apply(images)
 
         if __debug__:
-            self.show_images(images)
+            #self.show_images(images)
+            pass  # TODO dont show in not main thread
 
         return tuple(images)
 
