@@ -48,10 +48,11 @@ class ImgTweaksBasedOnPresumablySameArea(ImageTweaks):
     walking in front of it).
     """
 
-    def __init__(self, interactive=True, masks=None):
+    def __init__(self, interactive=True, masks=None, blur_images=False):
         """
         :param interactive: whether to select masks manually (using mouse in displayed images)
         :param masks: number of image masks MUST match number of images that will be processed later
+        :param blur_images: blur images little bit, so histograms may (or may not) be a bit more stable
         """
         if interactive:
             self.interactive = True
@@ -62,6 +63,7 @@ class ImgTweaksBasedOnPresumablySameArea(ImageTweaks):
 
         self.reference_images = None  # list of reference images for each source is created at the first use
         self.is_first_run = True
+        self.blur_images = blur_images
 
     def apply(self, images: List[np.ndarray]) -> List[np.ndarray]:
         """
@@ -79,6 +81,10 @@ class ImgTweaksBasedOnPresumablySameArea(ImageTweaks):
         images = self.sync_images_with_their_source_reference(images)
         # Images in one step/iteration are then synced with one image from that step.
         images = self.sync_images_mutually(images)
+
+        if self.blur_images:
+            for i, image in enumerate(images):
+                cv2.blur(image, (3, 3), images[i])
 
         return images
 
