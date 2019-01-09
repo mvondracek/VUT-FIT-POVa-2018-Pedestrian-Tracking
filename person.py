@@ -8,6 +8,7 @@ BUT - Brno University of Technology
 import datetime
 from typing import List
 
+import cv2
 import numpy as np
 
 from camera import Camera
@@ -31,12 +32,33 @@ class PersonView:
         self.pose_top_coordinate = pose_top_coordinate
         self.pose_bottom_coordinate = pose_bottom_coordinate
 
+    def get_torso(self):
+        """
+        Extract coordinates of person's torso.
+        :return: top left, bottom right
+        """
+        image_width = self.original_image.shape[1]
+        body_height = int(utils.euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
+        # an average body's width from side is about one third of the height (half of the height from front)
+        half_body_width = int(body_height / 6)
+
+        pose_top_left = (min(self.pose_top_coordinate[0], self.pose_bottom_coordinate[0]),
+                         min(self.pose_top_coordinate[1], self.pose_bottom_coordinate[1]))
+        pose_bottom_right = (max(self.pose_top_coordinate[0], self.pose_bottom_coordinate[0]),
+                             max(self.pose_top_coordinate[1], self.pose_bottom_coordinate[1]))
+
+        roi_top_left = (max(0, pose_top_left[0] - half_body_width), pose_top_left[1])
+        roi_bottom_right = (min(image_width, pose_bottom_right[0] + half_body_width), pose_bottom_right[1])
+
+        return roi_top_left, roi_bottom_right
+
     def get_torso_subimage(self):
         """
         Extract a subimage of just a torso for given person view.
         Should be better for histograms since contains less surroundings than the whole person box.
         :return: subimage containing only the torso
         """
+        # TODO use self.get_torso()
         image_width = self.original_image.shape[1]
         body_height = int(utils.euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
         # an average body's width from side is about one third of the height (half of the height from front)
@@ -52,6 +74,21 @@ class PersonView:
 
         return self.original_image[roi_top_left[1]:roi_bottom_right[1] + 1, roi_top_left[0]:roi_bottom_right[0] + 1]
 
+    def get_debug_image(self, pose=True, torso=True):
+        image = self.original_image.copy()
+        pose_color = (0, 255, 0)
+        torso_color = (0, 0, 255)
+
+        if pose:
+            cv2.line(image, self.pose_top_coordinate, self.pose_bottom_coordinate, pose_color, 2)
+            cv2.putText(image, 'pose_top', self.pose_top_coordinate, cv2.FONT_HERSHEY_SIMPLEX, 1, pose_color)
+            cv2.putText(image, 'pose_bottom', self.pose_bottom_coordinate, cv2.FONT_HERSHEY_SIMPLEX, 1, pose_color)
+
+        if torso:
+            torso_top_left, torso_bottom_right = self.get_torso()
+            cv2.rectangle(image, torso_top_left, torso_bottom_right, torso_color)
+            cv2.putText(image, 'torso', torso_top_left, cv2.FONT_HERSHEY_SIMPLEX, 1, torso_color)
+        return image
 
 class PersonTimeFrame:
     """
