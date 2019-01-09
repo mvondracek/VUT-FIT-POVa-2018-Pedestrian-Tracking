@@ -69,6 +69,8 @@ class Plotter3D(Visualizer):
         self._render_people_paths()
         self._render_axis_labels()
         self.ax.legend()
+        self.ax.set_ylim(0, 700)  # TODO necommittovat
+        self.ax.set_xlim(-200, 200)
         plt.draw()
         plt.pause(0.001)  # NOTE: https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
 

@@ -20,7 +20,7 @@ import numpy as np
 
 from camera import Camera
 from config import FOCAL_LENGTH_CAMERA_M, FOCAL_LENGTH_CAMERA_F, AVERAGE_PERSON_WAIST_TO_NECK_LENGTH
-from detector import OpenPoseDetector, PeopleDetector
+from detector import OpenPoseDetector, PeopleDetector, OpenPoseBinaryDetector
 from image_provider import ImageProvider, ImageProviderFromVideo, DummyImageProvider
 from image_tweaks import ImgTweaksBasedOnPresumablySameArea
 from matcher import PersonMatcher, HistogramMatcher
@@ -76,8 +76,9 @@ def processing_pipeline(cameras: List[Camera], z_level: int, output_queue: multi
     image_provider = ImageProviderFromVideo(
         # ['testing_data/s3_m_front_single.mov', 'testing_data/s3_f_side_single.mov'],
         # start=39*30,  # start after first few seconds # used for s3_m_front_single.mov and s3_f_side_single.mov
+        # skipping=60,
         ['testing_data/s3_m_front_multi.mov', 'testing_data/s3_f_side_multi.mov'],
-        start=43*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
+        start=24*30,  # start after first few seconds # used for s3_m_front_multi.mov and s3_f_side_multi.mov
         skipping=10,
         image_tweaker=image_tweaker)  # type: ImageProvider # (30 fps)
 
@@ -86,30 +87,37 @@ def processing_pipeline(cameras: List[Camera], z_level: int, output_queue: multi
     #                                     iterations=3
     #                                     )  # type: ImageProvider
     logger.debug('Using {} as ImageProvider.'.format(type(image_provider).__name__))
-    detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
+    # TODO original: detector = OpenPoseDetector(prototxt_path, caffemodel_path)  # type: PeopleDetector
+    detector = OpenPoseBinaryDetector(
+        r'C:\Users\Filip\Downloads\openpose-1.4.0-win64-gpu-binaries\bin\OpenPoseDemo.exe',
+        using_gpu=True,
+        net_resolution='-1x224'
+    )
     matcher = HistogramMatcher()  # type: PersonMatcher
     triangulation = CameraDistanceTriangulation(AVERAGE_PERSON_WAIST_TO_NECK_LENGTH, z_level)  # type: Triangulation
     tracker = HistogramTracker()  # type: PersonTracker
     # endregion
 
     for i, image_set in enumerate(image_provider):
-        logger.info('step {}'.format(i))
-        front_image, side_image = image_set
+        # logger.info('step {}'.format(i))
+        print('step ', i)
+        # TODO original: front_image, side_image = image_set
 
-        logger.info('detecting people')
-        front_views = detector.detect(front_image, cameras[0])
-        side_views = detector.detect(side_image, cameras[1])
+        # logger.info('detecting people')
+        # TODO original: front_views = detector.detect(front_image, cameras[0])
+        # TODO original: side_views = detector.detect(side_image, cameras[1])
+        front_views, side_views = detector.detect_multiple_images(image_set, cameras)
 
-        logger.info('matching people')
+        # logger.info('matching people')
         time_frames = matcher.match(front_views, side_views)
 
-        logger.info('locating people')
+        # logger.info('locating people')
         time_frames_located = []
         for time_frame in time_frames:
             located_frame = triangulation.locate(time_frame)
             time_frames_located.append(located_frame)
 
-        logger.info('tracking people')
+        # logger.info('tracking people')
         for time_frame in time_frames_located:
             person = tracker.track(time_frame)
             logger.info("Person={}, 3D={}".format(person.name, person.time_frames[-1].coordinates_3d))
@@ -163,7 +171,7 @@ def main() -> ExitCode:
             visualizer.render(results_queue.get())
             plt.show()
 
-        plt.pause(1)  # evil pause pauses all threads, not just main -> threading won't work, needs multiprocessing
+        plt.pause(10)  # evil pause pauses all threads, not just main -> threading won't work, needs multiprocessing
         if cv2.waitKey(2) & 0xFF == ord('q'):
             logger.debug('break')
             break
