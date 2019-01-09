@@ -9,6 +9,7 @@ class PovaPose:
     def __init__(self, prototxt_path="pose/coco/pose_deploy_linevec.prototxt", caffemodel_path="pose/coco/pose_iter_440000.caffemodel"):
         self.net = cv2.dnn.readNetFromCaffe(prototxt_path, caffemodel_path)
         self.threshold = 0.1
+        self.frame_orig = None
         self.frameCopy = None
         self.frameWidth = 0
         self.frameHeight = 0
@@ -42,6 +43,7 @@ class PovaPose:
 
     def set_image_for_detection(self, cv2_image):
         frame = cv2_image
+        self.frame_orig = np.copy(frame)
         self.frameCopy = np.copy(frame)
         self.frameWidth = frame.shape[1]
         self.frameHeight = frame.shape[0]
@@ -85,6 +87,7 @@ class PovaPose:
         personwiseKeypoints = self.getPersonwiseKeypoints(valid_pairs, invalid_pairs)
 
         resultSet = self.getResultForEachPerson(personwiseKeypoints, frameClone)
+        self.result_set_multi_person_detection = resultSet
 
         for i, r, in enumerate(resultSet):
             if len(r[1]) == 0 or (len(r[2]) == 0 and len(r[3]) == 0):
@@ -107,6 +110,42 @@ class PovaPose:
             cv2.circle(self.frameCopy, (int(r[2][0]), int(r[2][1])), 1, (0, 255, 255), thickness=1, lineType=cv2.FILLED)
 
         return peopleResult
+
+    def get_debug_image(self):
+        debug_image = self.frame_orig.copy()
+        for person in self.result_set_multi_person_detection:
+            # Structure for each person
+            # [0] - Sub picture for person
+            # [1] - Neck xy
+            # [2] - Right hip xy
+            # [3] - Left hip xy
+            # [4] - Right ankle xy
+            # [5] - Left ankle xy
+            font_face = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1
+            thickness = 2
+
+            def put_labeled_point(image, text, point, color, position_left=False, ):
+                text_size, baseline = cv2.getTextSize(text, font_face, font_scale, thickness)
+                if position_left:
+                    org = (point[0] - text_size[0], point[1])
+                else:
+                    org = (point[0], point[1])
+                cv2.putText(image, text, org, font_face, font_scale, color, thickness)
+                cv2.circle(debug_image, (point[0], point[1]), 10, color, thickness)
+
+            put_labeled_point(debug_image, 'ankle_left', person[5], (255, 0, 0), position_left=False)
+            put_labeled_point(debug_image, 'hip_left', person[3], (255, 128, 0), position_left=False)
+            put_labeled_point(debug_image, 'neck', person[1], (255, 128, 255), position_left=True)
+            put_labeled_point(debug_image, 'hip_right', person[2], (0, 128, 255), position_left=True)
+            put_labeled_point(debug_image, 'ankle_right', person[4], (0, 0, 255), position_left=True)
+
+            green = (0, 255, 0)
+            cv2.line(debug_image, (person[5][0], person[5][1]), (person[3][0], person[3][1]), green, thickness)
+            cv2.line(debug_image, (person[3][0], person[3][1]), (person[1][0], person[1][1]), green, thickness)
+            cv2.line(debug_image, (person[1][0], person[1][1]), (person[2][0], person[2][1]), green, thickness)
+            cv2.line(debug_image, (person[2][0], person[2][1]), (person[4][0], person[4][1]), green, thickness)
+        return debug_image
 
     def getResultForEachPerson(self, personwiseKeypoints, frameClone):
         people = []
