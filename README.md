@@ -20,6 +20,9 @@ We have implemented a computer vision system intended for **tracking pedestrians
 ![Tracking with video](./doc/main.gif)
 *Scene observed by two cameras (left) and the result of pedestrian tracking (right)*
 
+![Person detection](./doc/pose.jpg)
+*Person detection*
+
 ## Installation
 
 1) **Python 3.7** is required.
