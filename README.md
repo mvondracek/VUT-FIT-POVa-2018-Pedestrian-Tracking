@@ -1,5 +1,8 @@
 # VUT FIT POVa 2018 Pedestrian Tracking
 
+| ⚠ This project is deprecated and isn't maintained. |
+|----------------------------------------------------|
+
 [![Python version](https://img.shields.io/badge/Python-3-blue.svg?style=flat-square)](https://www.python.org/)
 
 > [Computer Vision (POVa)](https://www.fit.vutbr.cz/study/courses/index.php.en?id=12895)<br/>
@@ -13,6 +16,12 @@ We have implemented a computer vision system intended for **tracking pedestrians
 ![Tracking visualisation](https://raw.githubusercontent.com/mvondracek/VUT-FIT-POVa-2018-Pedestrian-Tracking/master/doc/s3_single_3fps.png)
 
 *Path visualisation of the tracked person (green) in an observed scene*
+
+![Tracking with video](./doc/main.gif)
+*Scene observed by two cameras (left) and the result of pedestrian tracking (right)*
+
+![Person detection](./doc/pose.jpg)
+*Person detection*
 
 ## Installation
 
@@ -39,5 +48,8 @@ We have implemented a computer vision system intended for **tracking pedestrians
 
 ## Documentation
 
-* [`./VUT_FIT_POVa_2018_Pedestrian_Tracking.pdf`](./VUT_FIT_POVa_2018_Pedestrian_Tracking.pdf) project report
-* [`./xpetro11,xstast24,xvondr20.pdf`](./xpetro11,xstast24,xvondr20.pdf) presentation slides
+* [project report](./doc/VUT_FIT_POVa_2018_Pedestrian_Tracking_report.pdf)
+* presentation slides
+  ([pptx with animations](./doc/VUT_FIT_POVa_2018_Pedestrian_Tracking_presentation.pptx),
+  [pdf](./doc/VUT_FIT_POVa_2018_Pedestrian_Tracking_presentation.pdf))
+* [supplemental materials](./doc/)
