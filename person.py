@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from camera import Camera
-from utils import utils
+from utils import euclidean_distance
 
 
 class PersonView:
@@ -60,7 +60,7 @@ class PersonView:
         """
         # TODO use self.get_torso()
         image_width = self.original_image.shape[1]
-        body_height = int(utils.euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
+        body_height = int(euclidean_distance(self.pose_top_coordinate, self.pose_bottom_coordinate))
         # an average body's width from side is about one third of the height (half of the height from front)
         half_body_width = int(body_height / 6)
 
@@ -89,6 +89,13 @@ class PersonView:
             cv2.rectangle(image, torso_top_left, torso_bottom_right, torso_color)
             cv2.putText(image, 'torso', torso_top_left, cv2.FONT_HERSHEY_SIMPLEX, 1, torso_color)
         return image
+
+    def show(self):
+        # FIXME display the whole image and the person inside it? TODO change person subimage to mask
+        window_name = 'PersonView: {}'.format(self.__hash__())
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(window_name, self.person_image)
+
 
 class PersonTimeFrame:
     """
