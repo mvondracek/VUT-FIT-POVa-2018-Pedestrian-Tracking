@@ -14,6 +14,9 @@ We have implemented a computer vision system intended for **tracking pedestrians
 
 *Path visualisation of the tracked person (green) in an observed scene*
 
+![Tracking with video](./doc/main.gif)
+*Scene observed by two cameras (left) and the result of pedestrian tracking (right)*
+
 ## Installation
 
 1) **Python 3.7** is required.
