@@ -1,5 +1,8 @@
 # VUT FIT POVa 2018 Pedestrian Tracking
 
+| ⚠ This project is deprecated and isn't maintained. |
+|----------------------------------------------------|
+
 [![Python version](https://img.shields.io/badge/Python-3-blue.svg?style=flat-square)](https://www.python.org/)
 
 > [Computer Vision (POVa)](https://www.fit.vutbr.cz/study/courses/index.php.en?id=12895)<br/>
